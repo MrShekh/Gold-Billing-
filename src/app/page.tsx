@@ -1,65 +1,132 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Sidebar from "@/components/Sidebar";
+import AuthGuard from "@/components/AuthGuard";
+import { getDashboardStats, getBills, getCustomers } from "@/lib/db";
+import type { Bill, Customer } from "@/lib/db";
+import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp } from "lucide-react";
 
-export default function Home() {
+export default function DashboardPage() {
+  const [stats, setStats] = useState({ totalCustomers: 0, totalBills: 0, todayBills: 0 });
+  const [recentBills, setRecentBills] = useState<Bill[]>([]);
+  const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const statsData = await getDashboardStats();
+        setStats(statsData);
+        
+        const billsData = await getBills();
+        const sortedBills = billsData.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setRecentBills(sortedBills.slice(0, 5));
+        
+        const customersData = await getCustomers();
+        const sortedCustomers = customersData.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setRecentCustomers(sortedCustomers.slice(0, 5));
+      } catch (err) {
+        console.error("Failed to load dashboard data", err);
+      }
+    }
+    fetchData();
+  }, []);
+
+  function fmtDate(d: string) {
+    if (!d) return "-";
+    const [y, m, day] = d.split("-");
+    return `${day}/${m}/${y}`;
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <AuthGuard>
+      <div style={{ display: "flex" }}>
+        <Sidebar />
+        <div className="main-layout" style={{ flex: 1 }}>
+          <div className="page-header">
+            <h2>Dashboard</h2>
+            <p>Overview of your billing activity</p>
+          </div>
+          <div className="page-content">
+            {/* Stat Cards */}
+            <div className="grid-3 mb-4">
+              <div className="stat-card">
+                <div className="flex-between mb-2"><span className="stat-label">Total Customers</span><div className="stat-icon"><Users size={18} /></div></div>
+                <div className="stat-value">{stats.totalCustomers}</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Registered accounts</p>
+              </div>
+              <div className="stat-card">
+                <div className="flex-between mb-2"><span className="stat-label">Total Bills</span><div className="stat-icon"><FileText size={18} /></div></div>
+                <div className="stat-value">{stats.totalBills}</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>All time created</p>
+              </div>
+              <div className="stat-card">
+                <div className="flex-between mb-2"><span className="stat-label">Today&apos;s Bills</span><div className="stat-icon"><CalendarDays size={18} /></div></div>
+                <div className="stat-value">{stats.todayBills}</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Created today</p>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 14, padding: "20px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>⚜ Quick Actions</h3>
+                <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>Get started quickly</p>
+              </div>
+              <div className="flex gap-3">
+                <Link href="/customers" className="btn btn-secondary btn-sm"><Users size={14} /> Add Customer</Link>
+                <Link href="/bills/new" className="btn btn-primary btn-sm"><PlusCircle size={14} /> Create Bill</Link>
+              </div>
+            </div>
+
+            {/* Recent Sections */}
+            <div className="grid-2" style={{ gap: 20 }}>
+              <div className="form-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div className="flex-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
+                  <div className="flex-center gap-2"><FileText size={16} style={{ color: "var(--accent)" }} /><span style={{ fontWeight: 700, fontSize: 15 }}>Recent Bills</span></div>
+                  <Link href="/bills" className="btn btn-xs btn-secondary" style={{ display: "flex", alignItems: "center", gap: 4 }}>View All <ArrowRight size={12} /></Link>
+                </div>
+                {recentBills.length === 0 ? (
+                  <div className="empty-state" style={{ padding: 32 }}><TrendingUp /><h3>No bills yet</h3><p>Create your first bill</p></div>
+                ) : (
+                  <table className="data-table"><thead><tr><th>Voucher</th><th>Customer</th><th>Date</th></tr></thead>
+                    <tbody>{recentBills.map(b => (
+                      <tr key={b.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/bills/view?id=${b.id}`)}>
+                        <td><span className="badge badge-gold">{b.voucherNo}</span></td>
+                        <td style={{ fontWeight: 600 }}>{b.customerName}</td>
+                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{fmtDate(b.date)}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                )}
+              </div>
+              <div className="form-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div className="flex-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
+                  <div className="flex-center gap-2"><Users size={16} style={{ color: "var(--accent)" }} /><span style={{ fontWeight: 700, fontSize: 15 }}>Recent Customers</span></div>
+                  <Link href="/customers" className="btn btn-xs btn-secondary" style={{ display: "flex", alignItems: "center", gap: 4 }}>View All <ArrowRight size={12} /></Link>
+                </div>
+                {recentCustomers.length === 0 ? (
+                  <div className="empty-state" style={{ padding: 32 }}><Users /><h3>No customers yet</h3><p>Add your first customer</p></div>
+                ) : (
+                  <table className="data-table"><thead><tr><th>Name</th><th>Phone</th></tr></thead>
+                    <tbody>{recentCustomers.map(c => (
+                      <tr key={c.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/customers`)}>
+                        <td style={{ fontWeight: 600 }}>{c.name}</td>
+                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.phone}</td>
+                      </tr>
+                    ))}</tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
+
