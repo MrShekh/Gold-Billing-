@@ -188,8 +188,8 @@ function EditBillContent() {
           {err.length > 0 && <div style={{ background: "rgba(224,90,90,0.1)", border: "1px solid rgba(224,90,90,0.3)", borderRadius: 8, padding: "10px 14px", marginBottom: 16 }}>{err.map((e, i) => <p key={i} style={{ color: "var(--danger)", fontSize: 13 }}>⚠️ {e}</p>)}</div>}
 
           {/* Paper Bill Wrapper */}
-          <div style={{ background: "#fff", border: "1px solid #bbb", borderRadius: 6, padding: "18px 22px", color: "#000", fontFamily: "Courier New, monospace", boxShadow: "0 4px 24px rgba(0,0,0,0.25)" }}>
-
+          <div className="table-responsive" style={{ paddingBottom: 16 }}>
+            <div style={{ minWidth: 800, background: "#fff", border: "1px solid #bbb", borderRadius: 6, padding: "18px 22px", color: "#000", fontFamily: "Courier New, monospace", boxShadow: "0 4px 24px rgba(0,0,0,0.25)" }}>
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <div>
@@ -381,6 +381,7 @@ function EditBillContent() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
 
           <div className="flex-between" style={{ marginTop: 20, paddingBottom: 40 }}>

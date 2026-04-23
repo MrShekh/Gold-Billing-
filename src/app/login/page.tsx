@@ -27,8 +27,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-primary)" }}>
-      <div style={{ width: 380, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "40px 36px", boxShadow: "0 8px 40px rgba(0,0,0,0.3)" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-primary)", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 380, background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 16, padding: "40px 36px", boxShadow: "0 8px 40px rgba(0,0,0,0.3)", boxSizing: "border-box" }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ fontSize: 36 }}>🪙</div>

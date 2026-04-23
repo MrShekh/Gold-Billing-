@@ -86,7 +86,11 @@ function BillDetailContent() {
             className="form-card"
             style={{ background: "#1a1a24", border: "1px solid var(--border-light)" }}
           >
-            <BillPrint bill={bill} companyName={bill.customerName.toUpperCase()} />
+            <div className="table-responsive">
+              <div style={{ minWidth: 760 }}>
+                <BillPrint bill={bill} companyName={bill.customerName.toUpperCase()} />
+              </div>
+            </div>
           </div>
         </div>
       </div>

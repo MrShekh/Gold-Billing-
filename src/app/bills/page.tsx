@@ -99,70 +99,72 @@ export default function BillsPage() {
                 </div>
               </div>
             ) : (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Voucher No</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Items</th>
-                    <th>Closing Balance</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((b, i) => (
-                    <tr key={b.id}>
-                      <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
-                      <td>
-                        <span className="badge badge-gold">{b.voucherNo}</span>
-                      </td>
-                      <td style={{ fontWeight: 700 }}>{b.customerName}</td>
-                      <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                        {fmtDate(b.date)}
-                      </td>
-                      <td style={{ color: "var(--text-secondary)", fontSize: 13 }}>
-                        {getBillSummary(b)}
-                      </td>
-                      <td>
-                        {b.closingBalance !== undefined ? (
-                          <span style={{ fontWeight: 700, color: "var(--accent)" }}>
-                            {b.closingBalance}
-                          </span>
-                        ) : (
-                          <span style={{ color: "var(--text-muted)" }}>—</span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="flex gap-2">
-                          <Link
-                            href={`/bills/view?id=${b.id}`}
-                            className="btn btn-xs btn-secondary"
-                            title="View / Print"
-                          >
-                            <Eye size={12} />
-                          </Link>
-                          <Link
-                            href={`/bills/view?id=${b.id}`}
-                            className="btn btn-xs btn-secondary"
-                            title="Print"
-                          >
-                            <Printer size={12} />
-                          </Link>
-                          <button
-                            className="btn btn-xs btn-danger"
-                            onClick={() => setDeleteConfirm(b.id)}
-                            title="Delete"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Voucher No</th>
+                      <th>Customer</th>
+                      <th>Date</th>
+                      <th>Items</th>
+                      <th>Closing Balance</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filtered.map((b, i) => (
+                      <tr key={b.id}>
+                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
+                        <td>
+                          <span className="badge badge-gold">{b.voucherNo}</span>
+                        </td>
+                        <td style={{ fontWeight: 700 }}>{b.customerName}</td>
+                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                          {fmtDate(b.date)}
+                        </td>
+                        <td style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                          {getBillSummary(b)}
+                        </td>
+                        <td>
+                          {b.closingBalance !== undefined ? (
+                            <span style={{ fontWeight: 700, color: "var(--accent)" }}>
+                              {b.closingBalance}
+                            </span>
+                          ) : (
+                            <span style={{ color: "var(--text-muted)" }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className="flex gap-2">
+                            <Link
+                              href={`/bills/view?id=${b.id}`}
+                              className="btn btn-xs btn-secondary"
+                              title="View / Print"
+                            >
+                              <Eye size={12} />
+                            </Link>
+                            <Link
+                              href={`/bills/view?id=${b.id}`}
+                              className="btn btn-xs btn-secondary"
+                              title="Print"
+                            >
+                              <Printer size={12} />
+                            </Link>
+                            <button
+                              className="btn btn-xs btn-danger"
+                              onClick={() => setDeleteConfirm(b.id)}
+                              title="Delete"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

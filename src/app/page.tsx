@@ -93,15 +93,17 @@ export default function DashboardPage() {
                 {recentBills.length === 0 ? (
                   <div className="empty-state" style={{ padding: 32 }}><TrendingUp /><h3>No bills yet</h3><p>Create your first bill</p></div>
                 ) : (
-                  <table className="data-table"><thead><tr><th>Voucher</th><th>Customer</th><th>Date</th></tr></thead>
-                    <tbody>{recentBills.map(b => (
-                      <tr key={b.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/bills/view?id=${b.id}`)}>
-                        <td><span className="badge badge-gold">{b.voucherNo}</span></td>
-                        <td style={{ fontWeight: 600 }}>{b.customerName}</td>
-                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{fmtDate(b.date)}</td>
-                      </tr>
-                    ))}</tbody>
-                  </table>
+                  <div className="table-responsive">
+                    <table className="data-table"><thead><tr><th>Voucher</th><th>Customer</th><th>Date</th></tr></thead>
+                      <tbody>{recentBills.map(b => (
+                        <tr key={b.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/bills/view?id=${b.id}`)}>
+                          <td><span className="badge badge-gold">{b.voucherNo}</span></td>
+                          <td style={{ fontWeight: 600 }}>{b.customerName}</td>
+                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{fmtDate(b.date)}</td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
                 )}
               </div>
               <div className="form-card" style={{ padding: 0, overflow: "hidden" }}>
@@ -112,14 +114,16 @@ export default function DashboardPage() {
                 {recentCustomers.length === 0 ? (
                   <div className="empty-state" style={{ padding: 32 }}><Users /><h3>No customers yet</h3><p>Add your first customer</p></div>
                 ) : (
-                  <table className="data-table"><thead><tr><th>Name</th><th>Phone</th></tr></thead>
-                    <tbody>{recentCustomers.map(c => (
-                      <tr key={c.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/customers`)}>
-                        <td style={{ fontWeight: 600 }}>{c.name}</td>
-                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.phone}</td>
-                      </tr>
-                    ))}</tbody>
-                  </table>
+                  <div className="table-responsive">
+                    <table className="data-table"><thead><tr><th>Name</th><th>Phone</th></tr></thead>
+                      <tbody>{recentCustomers.map(c => (
+                        <tr key={c.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/customers`)}>
+                          <td style={{ fontWeight: 600 }}>{c.name}</td>
+                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.phone}</td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             </div>

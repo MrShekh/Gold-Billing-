@@ -196,78 +196,80 @@ export default function CustomersPage() {
                 <p>Add a new customer to get started</p>
               </div>
             ) : (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                    <th>Bills</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((c, i) => (
-                    <tr key={c.id}>
-                      <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
-                      <td>
-                        <div
-                          style={{
-                            fontWeight: 700,
-                            fontSize: 15,
-                            color: "var(--text-primary)",
-                          }}
-                        >
-                          {c.name}
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          className="flex-center gap-2"
-                          style={{ color: "var(--text-secondary)", fontSize: 13 }}
-                        >
-                          <Phone size={13} /> {c.phone}
-                        </div>
-                      </td>
-                      <td>
-                        {c.address ? (
+              <div className="table-responsive">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Address</th>
+                      <th>Bills</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((c, i) => (
+                      <tr key={c.id}>
+                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
+                        <td>
+                          <div
+                            style={{
+                              fontWeight: 700,
+                              fontSize: 15,
+                              color: "var(--text-primary)",
+                            }}
+                          >
+                            {c.name}
+                          </div>
+                        </td>
+                        <td>
                           <div
                             className="flex-center gap-2"
-                            style={{ color: "var(--text-muted)", fontSize: 13 }}
+                            style={{ color: "var(--text-secondary)", fontSize: 13 }}
                           >
-                            <MapPin size={12} /> {c.address}
+                            <Phone size={13} /> {c.phone}
                           </div>
-                        ) : (
-                          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
-                        )}
-                      </td>
-                      <td>
-                        <span className="badge badge-gold">
-                          <FileText size={11} style={{ marginRight: 4 }} />
-                          {getCustomerBillCount(c.id)} bill{getCustomerBillCount(c.id) !== 1 ? "s" : ""}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="flex gap-2">
-                          <button
-                            className="btn btn-xs btn-secondary"
-                            onClick={() => openEdit(c)}
-                          >
-                            <Pencil size={12} />
-                          </button>
-                          <button
-                            className="btn btn-xs btn-danger"
-                            onClick={() => setDeleteConfirm(c.id)}
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </td>
+                        <td>
+                          {c.address ? (
+                            <div
+                              className="flex-center gap-2"
+                              style={{ color: "var(--text-muted)", fontSize: 13 }}
+                            >
+                              <MapPin size={12} /> {c.address}
+                            </div>
+                          ) : (
+                            <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="badge badge-gold">
+                            <FileText size={11} style={{ marginRight: 4 }} />
+                            {getCustomerBillCount(c.id)} bill{getCustomerBillCount(c.id) !== 1 ? "s" : ""}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="flex gap-2">
+                            <button
+                              className="btn btn-xs btn-secondary"
+                              onClick={() => openEdit(c)}
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              className="btn btn-xs btn-danger"
+                              onClick={() => setDeleteConfirm(c.id)}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
