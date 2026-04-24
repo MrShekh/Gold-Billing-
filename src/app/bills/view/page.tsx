@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import BillPrint from "@/components/BillPrint";
 import { getBillById, type Bill } from "@/lib/db";
-import { ArrowLeft, FileText, Pencil } from "lucide-react";
+import { ArrowLeft, FileText, Pencil, Download } from "lucide-react";
 
 
 import { Suspense } from "react";
@@ -14,6 +14,23 @@ function BillDetailContent() {
   const id = searchParams.get("id");
   const router = useRouter();
   const [bill, setBill] = useState<Bill | null>(null);
+  const billRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = () => {
+    const element = billRef.current;
+    if (!element) return;
+    
+    import("html2pdf.js").then((html2pdf) => {
+      const opt = {
+        margin: 0.5,
+        filename: `bill-${bill?.voucherNo}.pdf`,
+        image: { type: "jpeg" as "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "in" as "in", format: "a4" as "a4", orientation: "portrait" as "portrait" },
+      };
+      html2pdf.default().set(opt).from(element).save();
+    });
+  };
 
   useEffect(() => {
     if (id) {
@@ -73,6 +90,12 @@ function BillDetailContent() {
               </button>
               <button
                 className="btn btn-secondary"
+                onClick={handleDownload}
+              >
+                <Download size={14} /> Download
+              </button>
+              <button
+                className="btn btn-secondary"
                 onClick={() => router.push("/bills")}
               >
                 <ArrowLeft size={14} /> Back
@@ -87,7 +110,7 @@ function BillDetailContent() {
             style={{ background: "#1a1a24", border: "1px solid var(--border-light)" }}
           >
             <div className="table-responsive">
-              <div style={{ minWidth: 760 }}>
+              <div style={{ minWidth: 760 }} ref={billRef}>
                 <BillPrint bill={bill} companyName={bill.customerName.toUpperCase()} />
               </div>
             </div>

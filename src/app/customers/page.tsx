@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import {
   getCustomers,
@@ -7,9 +7,12 @@ import {
   updateCustomer,
   deleteCustomer,
   getBills,
+  getCustomerBalance,
+  recordPayment,
   type Customer,
+  type CustomerBalance,
 } from "@/lib/db";
-import { Search, UserPlus, Pencil, Trash2, Phone, MapPin, FileText, X } from "lucide-react";
+import { Search, UserPlus, Pencil, Trash2, Phone, MapPin, FileText, X, CreditCard, Scale } from "lucide-react";
 
 type Mode = "list" | "add" | "edit";
 
@@ -28,6 +31,13 @@ export default function CustomersPage() {
   const [error, setError] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  // Payment panel state
+  const [payPanelId, setPayPanelId] = useState<string | null>(null);
+  const [payGold, setPayGold] = useState("");
+  const [payCash, setPayCash] = useState("");
+  const [payLoading, setPayLoading] = useState(false);
+  const [balances, setBalances] = useState<Record<string, CustomerBalance | null>>({});
+
   async function load() {
     try {
       const allData = await getCustomers();
@@ -43,6 +53,15 @@ export default function CustomersPage() {
         counts[bill.customerId] = (counts[bill.customerId] || 0) + 1;
       }
       setBillCounts(counts);
+
+      // Load Jama balances for all customers in parallel
+      const balanceEntries = await Promise.all(
+        all.map(async c => {
+          const bal = await getCustomerBalance(c.id);
+          return [c.id, bal] as [string, typeof bal];
+        })
+      );
+      setBalances(Object.fromEntries(balanceEntries));
     } catch (e) {
       console.error(e);
     }
@@ -92,6 +111,32 @@ export default function CustomersPage() {
     await deleteCustomer(id);
     setDeleteConfirm(null);
     load();
+  }
+
+  async function openPayPanel(customerId: string) {
+    setPayPanelId(customerId);
+    setPayGold(""); setPayCash("");
+    // Fetch current balance
+    if (!balances[customerId]) {
+      const bal = await getCustomerBalance(customerId);
+      setBalances(prev => ({ ...prev, [customerId]: bal }));
+    }
+  }
+
+  function closePayPanel() { setPayPanelId(null); }
+
+  async function handleRecordPayment(customerId: string) {
+    const g = parseFloat(payGold) || 0;
+    const c = parseFloat(payCash) || 0;
+    if (g === 0 && c === 0) return;
+    setPayLoading(true);
+    await recordPayment(customerId, g, c);
+    // Refresh balance
+    const updated = await getCustomerBalance(customerId);
+    setBalances(prev => ({ ...prev, [customerId]: updated }));
+    setPayGold(""); setPayCash("");
+    setPayLoading(false);
+    setPayPanelId(null);
   }
 
   function getCustomerBillCount(id: string) {
@@ -205,67 +250,166 @@ export default function CustomersPage() {
                       <th>Phone</th>
                       <th>Address</th>
                       <th>Bills</th>
+                      <th>Jama Balance</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((c, i) => (
-                      <tr key={c.id}>
-                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
-                        <td>
-                          <div
-                            style={{
-                              fontWeight: 700,
-                              fontSize: 15,
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            {c.name}
-                          </div>
-                        </td>
-                        <td>
-                          <div
-                            className="flex-center gap-2"
-                            style={{ color: "var(--text-secondary)", fontSize: 13 }}
-                          >
-                            <Phone size={13} /> {c.phone}
-                          </div>
-                        </td>
-                        <td>
-                          {c.address ? (
-                            <div
-                              className="flex-center gap-2"
-                              style={{ color: "var(--text-muted)", fontSize: 13 }}
-                            >
-                              <MapPin size={12} /> {c.address}
+                      <React.Fragment key={c.id}>
+                        <tr>
+                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
+                          <td>
+                            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
+                              {c.name}
                             </div>
-                          ) : (
-                            <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
-                          )}
-                        </td>
-                        <td>
-                          <span className="badge badge-gold">
-                            <FileText size={11} style={{ marginRight: 4 }} />
-                            {getCustomerBillCount(c.id)} bill{getCustomerBillCount(c.id) !== 1 ? "s" : ""}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="flex gap-2">
-                            <button
-                              className="btn btn-xs btn-secondary"
-                              onClick={() => openEdit(c)}
-                            >
-                              <Pencil size={12} />
-                            </button>
-                            <button
-                              className="btn btn-xs btn-danger"
-                              onClick={() => setDeleteConfirm(c.id)}
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                          </td>
+                          <td>
+                            <div className="flex-center gap-2" style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                              <Phone size={13} /> {c.phone}
+                            </div>
+                          </td>
+                          <td>
+                            {c.address ? (
+                              <div className="flex-center gap-2" style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                                <MapPin size={12} /> {c.address}
+                              </div>
+                            ) : (
+                              <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge badge-gold">
+                              <FileText size={11} style={{ marginRight: 4 }} />
+                              {getCustomerBillCount(c.id)} bill{getCustomerBillCount(c.id) !== 1 ? "s" : ""}
+                            </span>
+                          </td>
+                          <td>
+                            {balances[c.id] !== undefined ? (
+                              <div style={{ fontSize: 12 }}>
+                                <div style={{ color: balances[c.id] && (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#f59e0b" : "var(--text-muted)" }}>
+                                  <Scale size={11} style={{ marginRight: 3, verticalAlign: "middle" }} />
+                                  {(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g
+                                </div>
+                                <div style={{ color: balances[c.id] && (balances[c.id]?.cash_balance ?? 0) > 0 ? "#f59e0b" : "var(--text-muted)", marginTop: 2 }}>
+                                  ₹{(balances[c.id]?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                </div>
+                              </div>
+                            ) : (
+                              <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="flex gap-2">
+                              <button className="btn btn-xs btn-secondary" onClick={() => openEdit(c)}><Pencil size={12} /></button>
+                              <button
+                                className="btn btn-xs"
+                                style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}
+                                onClick={() => payPanelId === c.id ? closePayPanel() : openPayPanel(c.id)}
+                                title="Record Payment"
+                              >
+                                <CreditCard size={12} />
+                              </button>
+                              <button className="btn btn-xs btn-danger" onClick={() => setDeleteConfirm(c.id)}><Trash2 size={12} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                        {/* Record Payment Panel */}
+                        {payPanelId === c.id && (
+                          <tr key={`pay-${c.id}`}>
+                            <td colSpan={7} style={{ padding: 0 }}>
+                              <div style={{
+                                background: "rgba(245,158,11,0.07)",
+                                border: "1px solid rgba(245,158,11,0.25)",
+                                borderTop: "none",
+                                padding: "14px 18px",
+                              }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                                  <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
+                                    💰 Record Payment — {c.name}
+                                  </div>
+                                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                                    Current Jama: &nbsp;
+                                    <strong style={{ color: "#f59e0b" }}>
+                                      {(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g
+                                    </strong>
+                                    &nbsp;|&nbsp;
+                                    <strong style={{ color: "#f59e0b" }}>
+                                      ₹{(balances[c.id]?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                    </strong>
+                                  </div>
+                                </div>
+                                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
+                                  {/* Fine Gold */}
+                                  <div>
+                                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>Fine Gold Paid (grams)</div>
+                                    <div style={{ fontSize: 11, marginBottom: 5, display: "flex", alignItems: "center", gap: 6 }}>
+                                      <span style={{ color: "var(--text-muted)" }}>Outstanding:</span>
+                                      <span style={{
+                                        fontWeight: 700,
+                                        color: (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#b45309" : "#166534",
+                                        background: (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#fef9e7" : "#f0fdf4",
+                                        border: `1px solid ${(balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#fde68a" : "#bbf7d0"}`,
+                                        borderRadius: 4, padding: "1px 7px", fontSize: 12
+                                      }}>
+                                        {(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g
+                                      </span>
+                                    </div>
+                                    <input
+                                      type="number" min="0" step="0.001"
+                                      value={payGold}
+                                      onChange={e => setPayGold(e.target.value)}
+                                      placeholder="0.000"
+                                      className="form-input"
+                                      style={{ width: 150 }}
+                                    />
+                                  </div>
+                                  {/* Cash */}
+                                  <div>
+                                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>Cash Paid (₹)</div>
+                                    <div style={{ fontSize: 11, marginBottom: 5, display: "flex", alignItems: "center", gap: 6 }}>
+                                      <span style={{ color: "var(--text-muted)" }}>Outstanding:</span>
+                                      <span style={{
+                                        fontWeight: 700,
+                                        color: (balances[c.id]?.cash_balance ?? 0) > 0 ? "#b45309" : "#166534",
+                                        background: (balances[c.id]?.cash_balance ?? 0) > 0 ? "#fef9e7" : "#f0fdf4",
+                                        border: `1px solid ${(balances[c.id]?.cash_balance ?? 0) > 0 ? "#fde68a" : "#bbf7d0"}`,
+                                        borderRadius: 4, padding: "1px 7px", fontSize: 12
+                                      }}>
+                                        ₹{(balances[c.id]?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                      </span>
+                                    </div>
+                                    <input
+                                      type="number" min="0" step="0.01"
+                                      value={payCash}
+                                      onChange={e => setPayCash(e.target.value)}
+                                      placeholder="0.00"
+                                      className="form-input"
+                                      style={{ width: 150 }}
+                                    />
+                                  </div>
+                                  <div style={{ alignSelf: "flex-end" }}>
+                                    <button
+                                      className="btn btn-primary"
+                                      disabled={payLoading}
+                                      onClick={() => handleRecordPayment(c.id)}
+                                    >
+                                      {payLoading ? "Saving…" : "✓ Confirm Payment"}
+                                    </button>
+                                    <button
+                                      className="btn btn-secondary"
+                                      style={{ marginLeft: 8 }}
+                                      onClick={closePayPanel}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

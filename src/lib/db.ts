@@ -9,6 +9,14 @@ export interface Customer {
   createdAt: string;
 }
 
+export interface CustomerBalance {
+  id: string;
+  customer_id: string;
+  fine_gold_balance: number; // grams outstanding
+  cash_balance: number;      // rupees outstanding
+  updated_at: string;
+}
+
 export interface BillItem {
   id: string;
   type: "ISSUE" | "RECEIVE";
@@ -18,6 +26,7 @@ export interface BillItem {
   pcs?: string;
   grossWeight?: string;
   lessWeight?: string;
+  description?: string;
   netWeight?: string;
   tunch?: string;
   rate?: string;
@@ -58,6 +67,9 @@ export interface Bill {
   billTotalLess?: string;
   billTotalNet?: string;
   billTotalFine?: string;
+  // Jama balance fields
+  prevFineGold?: string;
+  closingFineGold?: string;
   createdAt: string;
 }
 
@@ -125,6 +137,7 @@ function mapBillRow(row: Record<string, string>, items: BillItem[], payments: Pa
     recvTotalNet: row.recv_total_net,       recvTotalFine: row.recv_total_fine,
     billTotalGross: row.bill_total_gross,   billTotalLess: row.bill_total_less,
     billTotalNet: row.bill_total_net,       billTotalFine: row.bill_total_fine,
+    prevFineGold: row.prev_fine_gold,       closingFineGold: row.closing_fine_gold,
     items, payments,
   };
 }
@@ -133,7 +146,8 @@ function mapItemRow(r: Record<string, string>): BillItem {
   return {
     id: r.id, type: r.type as "ISSUE" | "RECEIVE", sno: Number(r.sno),
     itemName: r.item_name, pcs: r.pcs, grossWeight: r.gross_weight,
-    lessWeight: r.less_weight, netWeight: r.net_weight,
+    lessWeight: r.less_weight, description: r.description,
+    netWeight: r.net_weight,
     tunch: r.tunch, rate: r.rate, fineGold: r.fine_gold, amount: r.amount,
   };
 }
@@ -178,6 +192,22 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
   const userId = await getUserId();
   if (!userId) return null;
 
+  // ── Jama Balance: fetch previous outstanding balance ──────────────────────
+  const prevBalance = await getCustomerBalance(data.customerId);
+  const prevFineGoldNum  = prevBalance?.fine_gold_balance ?? 0;
+  const prevCashNum      = prevBalance?.cash_balance      ?? 0;
+
+  // Current bill fine gold (ISSUE rows only)
+  const billFineGold = data.items
+    .filter(i => i.type === "ISSUE")
+    .reduce((sum, i) => sum + (parseFloat(i.fineGold ?? "0") || 0), 0);
+  // Net cash from item amount column (positive = due, negative = credit/subtract)
+  const billCash = data.items
+    .reduce((sum, i) => sum + (parseFloat(i.amount ?? "0") || 0), 0);
+
+  const closingFineGoldNum = prevFineGoldNum + billFineGold;
+  const closingCashNum     = prevCashNum     + billCash;
+
   const { data: row, error } = await supabase.from("bills").insert({
     user_id: userId,
     customer_id: data.customerId,    customer_name: data.customerName,
@@ -191,6 +221,9 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
     recv_total_net: data.recvTotalNet,       recv_total_fine: data.recvTotalFine,
     bill_total_gross: data.billTotalGross,   bill_total_less: data.billTotalLess,
     bill_total_net: data.billTotalNet,       bill_total_fine: data.billTotalFine,
+    // Jama balance columns
+    prev_fine_gold:    prevFineGoldNum.toFixed(3),
+    closing_fine_gold: closingFineGoldNum.toFixed(3),
   }).select().single();
   if (error) { console.error(error); return null; }
 
@@ -198,6 +231,7 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
     await supabase.from("bill_items").insert(data.items.map(i => ({
       bill_id: row.id, type: i.type, sno: i.sno, item_name: i.itemName,
       pcs: i.pcs, gross_weight: i.grossWeight, less_weight: i.lessWeight,
+      description: i.description,
       net_weight: i.netWeight, tunch: i.tunch, rate: i.rate,
       fine_gold: i.fineGold, amount: i.amount,
     })));
@@ -208,6 +242,18 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
       type: p.type, voucher_no: p.voucherNo, date: p.date,
     })));
   }
+
+  // ── Update the customer's running Jama balance ────────────────────────────
+  await supabase
+    .from("customer_balance")
+    .upsert({
+      customer_id: data.customerId,
+      user_id: userId,
+      fine_gold_balance: closingFineGoldNum,
+      cash_balance:      closingCashNum,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id,customer_id" });
+
   return getBillById(row.id) as Promise<Bill>;
 }
 
@@ -236,6 +282,7 @@ export async function updateBill(id: string, data: Omit<Bill, "id" | "createdAt"
     await supabase.from("bill_items").insert(data.items.map(i => ({
       bill_id: id, type: i.type, sno: i.sno, item_name: i.itemName,
       pcs: i.pcs, gross_weight: i.grossWeight, less_weight: i.lessWeight,
+      description: i.description,
       net_weight: i.netWeight, tunch: i.tunch, rate: i.rate,
       fine_gold: i.fineGold, amount: i.amount,
     })));
@@ -251,6 +298,47 @@ export async function updateBill(id: string, data: Omit<Bill, "id" | "createdAt"
 
 export async function deleteBill(id: string): Promise<void> {
   await supabase.from("bills").delete().eq("id", id);
+}
+
+// ─── JAMA BALANCE ─────────────────────────────────────────────────────────────
+/** Returns the current outstanding (Jama) balance for a customer, or null if none. */
+export async function getCustomerBalance(
+  customerId: string
+): Promise<CustomerBalance | null> {
+  const { data, error } = await supabase
+    .from("customer_balance")
+    .select("*")
+    .eq("customer_id", customerId)
+    .single();
+  if (error) return null;
+  return data as CustomerBalance;
+}
+
+/**
+ * Record a payment made by a customer.
+ * Subtracts the paid amounts from their running Jama balance.
+ */
+export async function recordPayment(
+  customerId: string,
+  paidFineGold: number, // grams paid
+  paidCash: number      // rupees paid
+): Promise<void> {
+  const userId = await getUserId();
+  if (!userId) return;
+
+  const prev = await getCustomerBalance(customerId);
+  const newFineGold = Math.max(0, (prev?.fine_gold_balance ?? 0) - paidFineGold);
+  const newCash     = Math.max(0, (prev?.cash_balance      ?? 0) - paidCash);
+
+  await supabase
+    .from("customer_balance")
+    .upsert({
+      customer_id: customerId,
+      user_id: userId,
+      fine_gold_balance: newFineGold,
+      cash_balance: newCash,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id,customer_id" });
 }
 
 export async function generateVoucherNo(): Promise<string> {

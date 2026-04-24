@@ -2,15 +2,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { getCustomers, addBill, generateVoucherNo, type Customer, type BillItem, type PaymentEntry } from "@/lib/db";
-import { PlusCircle, Trash2, Save } from "lucide-react";
+import { getCustomers, addBill, generateVoucherNo, getCustomerBalance, type Customer, type CustomerBalance, type BillItem } from "@/lib/db";
+import { PlusCircle, Trash2, Save, Scale } from "lucide-react";
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function makeItem(type: "ISSUE" | "RECEIVE"): BillItem {
-  return { id: uid(), type, sno: 1, itemName: "", grossWeight: "", lessWeight: "", netWeight: "", tunch: "", rate: "", fineGold: "", pcs: "", amount: "" };
-}
-function makePayment(): PaymentEntry {
-  return { id: uid(), amount: "", label: "", type: "paid" };
+  return { id: uid(), type, sno: 1, itemName: "", grossWeight: "", lessWeight: "", description: "", netWeight: "", tunch: "", rate: "", fineGold: "", pcs: "", amount: "" };
 }
 
 const th: React.CSSProperties = { border: "1px solid #000", padding: "3px 4px", background: "#f0f0f0", fontFamily: "Courier New, monospace", fontSize: 10.5, fontWeight: "bold", textAlign: "center", lineHeight: 1.2, verticalAlign: "middle" };
@@ -27,7 +24,7 @@ export default function NewBillPage() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [issue, setIssue] = useState<BillItem[]>([makeItem("ISSUE")]);
   const [recv, setRecv] = useState<BillItem[]>([makeItem("RECEIVE")]);
-  const [pays, setPays] = useState<PaymentEntry[]>([makePayment(), makePayment(), makePayment(), makePayment()]);
+
   
   // Total states
   const [iG, setIG] = useState(""); const [iL, setIL] = useState(""); const [iN, setIN] = useState(""); const [iF, setIF] = useState("");
@@ -41,6 +38,8 @@ export default function NewBillPage() {
   const [drNaam, setDrNaam] = useState("");
   const [err, setErr] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [jamaBalance, setJamaBalance] = useState<CustomerBalance | null>(null);
+  const [jamaLoading, setJamaLoading] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -55,6 +54,26 @@ export default function NewBillPage() {
     }
     init();
   }, []);
+
+  async function onCustomerSelect(customerId: string) {
+    setCid(customerId);
+    setJamaBalance(null);
+    setPrevBal("");
+    if (!customerId) return;
+    setJamaLoading(true);
+    try {
+      const bal = await getCustomerBalance(customerId);
+      setJamaBalance(bal);
+      // Auto-fill cash previous balance from Jama
+      if (bal && bal.cash_balance > 0) {
+        setPrevBal(bal.cash_balance.toFixed(2));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setJamaLoading(false);
+    }
+  }
 
   // Auto-calculate net & fine gold when a row field changes
   function calcRow(item: BillItem): BillItem {
@@ -74,8 +93,6 @@ export default function NewBillPage() {
     setIssue(p => { const n = [...p]; n[i] = calcRow({ ...n[i], [f]: v }); return n; });
   const upR = (i: number, f: keyof BillItem, v: string) =>
     setRecv(p => { const n = [...p]; n[i] = calcRow({ ...n[i], [f]: v }); return n; });
-  const upP = (i: number, f: keyof PaymentEntry, v: string) =>
-    setPays(p => { const n = [...p]; n[i] = { ...n[i], [f]: v }; return n; });
 
   // Auto-sum section totals whenever rows change
   useEffect(() => {
@@ -112,6 +129,11 @@ export default function NewBillPage() {
     setTF(fmt(diff(iF, rF)));
   }, [iG, iL, iN, iF, rG, rL, rN, rF]);
 
+  // Jama fine gold = previous (from DB) + this bill's net fine gold
+  const prevJamaGold    = jamaBalance?.fine_gold_balance ?? 0;
+  const currentBillGold = parseFloat(tF) || 0;
+  const closingJamaGold = prevJamaGold + currentBillGold;
+
   const tInp = (val: string | undefined, onChange: (v: string) => void, bold?: boolean, readOnly?: boolean) => (
     <input
       type="text"
@@ -135,11 +157,14 @@ export default function NewBillPage() {
         ...issue.filter(i => i.itemName.trim()).map((i, idx) => ({ ...i, sno: idx + 1, type: "ISSUE" as const })),
         ...recv.filter(i => i.itemName.trim()).map((i, idx) => ({ ...i, sno: idx + 1, type: "RECEIVE" as const })),
       ],
-      payments: pays.filter(p => p.label.trim() || p.amount),
-      paidCash, receiptCash: rcptCash, previousBalance: prevBal, closingBalance: closBal, drNaam,
+      payments: [],
+      paidCash: "", receiptCash: "", previousBalance: "", closingBalance: "", drNaam,
       issueTotalGross: iG, issueTotalLess: iL, issueTotalNet: iN, issueTotalFine: iF,
       recvTotalGross: rG, recvTotalLess: rL, recvTotalNet: rN, recvTotalFine: rF,
       billTotalGross: tG, billTotalLess: tL, billTotalNet: tN, billTotalFine: tF,
+      // Jama fine gold — passed explicitly so addBill can also read them
+      prevFineGold: prevJamaGold.toFixed(3),
+      closingFineGold: closingJamaGold.toFixed(3),
     });
     router.push("/bills");
   }
@@ -164,11 +189,45 @@ export default function NewBillPage() {
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <div>
                 <div style={{ fontSize: 9, color: "#888", marginBottom: 2 }}>CUSTOMER</div>
-                <select value={cid} onChange={e => setCid(e.target.value)}
+                <select value={cid} onChange={e => onCustomerSelect(e.target.value)}
                   style={{ fontFamily: "Courier New, monospace", fontSize: 14, fontWeight: "bold", letterSpacing: 1, border: "none", borderBottom: "2px dashed #999", background: "transparent", outline: "none", cursor: "pointer", color: cid ? "#000" : "#aaa" }}>
                   <option value="">SELECT CUSTOMER ▾</option>
                   {customers.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
                 </select>
+
+                {/* Jama Balance Banner */}
+                {jamaLoading && (
+                  <div style={{ marginTop: 6, fontSize: 11, color: "#b8860b", fontFamily: "Courier New, monospace" }}>Loading jama balance…</div>
+                )}
+                {!jamaLoading && cid && (
+                  <div style={{
+                    marginTop: 8, padding: "6px 10px", borderRadius: 6,
+                    background: jamaBalance && (jamaBalance.fine_gold_balance > 0 || jamaBalance.cash_balance > 0)
+                      ? "#fff8e1" : "#f0fff4",
+                    border: jamaBalance && (jamaBalance.fine_gold_balance > 0 || jamaBalance.cash_balance > 0)
+                      ? "1px solid #f59e0b" : "1px solid #6ee7b7",
+                    display: "flex", gap: 18, alignItems: "center"
+                  }}>
+                    <Scale size={14} style={{ color: "#b8860b", flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 9, color: "#92400e", fontWeight: "bold", letterSpacing: 0.5 }}>JAMA BALANCE (PREVIOUS DUE)</div>
+                      <div style={{ display: "flex", gap: 16, marginTop: 2 }}>
+                        <div>
+                          <span style={{ fontSize: 9, color: "#78350f" }}>Fine Gold: </span>
+                          <strong style={{ fontSize: 13, color: jamaBalance && jamaBalance.fine_gold_balance > 0 ? "#b45309" : "#166534" }}>
+                            {(jamaBalance?.fine_gold_balance ?? 0).toFixed(3)} g
+                          </strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: 9, color: "#78350f" }}>Cash: </span>
+                          <strong style={{ fontSize: 13, color: jamaBalance && jamaBalance.cash_balance > 0 ? "#b45309" : "#166534" }}>
+                            ₹{(jamaBalance?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div style={{ textAlign: "right", fontSize: 11.5, lineHeight: 2.1 }}>
                 <div>V.No.&nbsp;:&nbsp;<input type="text" value={vno} onChange={e => setVno(e.target.value)} style={{ ...inp, width: 100, borderBottom: "1px dashed #aaa", fontWeight: "bold", display: "inline" }} /></div>
@@ -186,6 +245,7 @@ export default function NewBillPage() {
                   <th style={{ ...th, width: 32 }}>Pcs</th>
                   <th style={{ ...th, width: 62 }}>Gross<br/>Weight</th>
                   <th style={{ ...th, width: 52 }}>Less<br/>Weight</th>
+                  <th style={{ ...th, width: 90, textAlign: "left" }}>Description</th>
                   <th style={{ ...th, width: 62 }}>Net<br/>Weight</th>
                   <th style={{ ...th, width: 52 }}>Tunch<br/>%</th>
                   <th style={{ ...th, width: 44 }}>Rate</th>
@@ -198,7 +258,7 @@ export default function NewBillPage() {
                 <tr>
                   <td style={td}></td><td style={td}></td>
                   <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>ISSUE</span></td>
-                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
+                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
                   <td style={{ border: "none", textAlign: "center" }}>
                     <button type="button" onClick={() => setIssue(p => [...p, makeItem("ISSUE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#4caf7d" }}><PlusCircle size={15} /></button>
                   </td>
@@ -211,6 +271,7 @@ export default function NewBillPage() {
                     <td style={td}>{tInp(item.pcs, v => upI(idx, "pcs", v))}</td>
                     <td style={td}>{tInp(item.grossWeight, v => upI(idx, "grossWeight", v))}</td>
                     <td style={td}>{tInp(item.lessWeight, v => upI(idx, "lessWeight", v))}</td>
+                    <td style={{ ...td, width: 90, maxWidth: 90, textAlign: "left" }}>{tInp(item.description, v => upI(idx, "description", v))}</td>
                     <td style={td}>{tInp(item.netWeight, v => upI(idx, "netWeight", v), false, true)}</td>
                     <td style={td}>{tInp(item.tunch, v => upI(idx, "tunch", v))}</td>
                     <td style={td}>{tInp(item.rate, v => upI(idx, "rate", v))}</td>
@@ -226,6 +287,7 @@ export default function NewBillPage() {
                   <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Issue - Total :</td>
                   <td style={td}><input type="text" value={iG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
                   <td style={td}><input type="text" value={iL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={totalTd}></td>
                   <td style={td}><input type="text" value={iN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
                   <td style={totalTd}></td><td style={totalTd}></td>
                   <td style={td}><input type="text" value={iF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
@@ -236,7 +298,7 @@ export default function NewBillPage() {
                 <tr>
                   <td style={td}></td><td style={td}></td>
                   <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>RECEIVE</span></td>
-                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
+                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
                   <td style={{ border: "none", textAlign: "center" }}>
                     <button type="button" onClick={() => setRecv(p => [...p, makeItem("RECEIVE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a" }}><PlusCircle size={15} /></button>
                   </td>
@@ -249,6 +311,7 @@ export default function NewBillPage() {
                     <td style={td}>{tInp(item.pcs, v => upR(idx, "pcs", v))}</td>
                     <td style={td}>{tInp(item.grossWeight, v => upR(idx, "grossWeight", v))}</td>
                     <td style={td}>{tInp(item.lessWeight, v => upR(idx, "lessWeight", v))}</td>
+                    <td style={{ ...td, textAlign: "left" }}>{tInp(item.description, v => upR(idx, "description", v))}</td>
                     <td style={td}>{tInp(item.netWeight, v => upR(idx, "netWeight", v), false, true)}</td>
                     <td style={td}>{tInp(item.tunch, v => upR(idx, "tunch", v))}</td>
                     <td style={td}>{tInp(item.rate, v => upR(idx, "rate", v))}</td>
@@ -264,6 +327,7 @@ export default function NewBillPage() {
                   <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Receive - Total :</td>
                   <td style={td}><input type="text" value={rG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
                   <td style={td}><input type="text" value={rL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={totalTd}></td>
                   <td style={td}><input type="text" value={rN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
                   <td style={totalTd}></td><td style={totalTd}></td>
                   <td style={td}><input type="text" value={rF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
@@ -275,6 +339,7 @@ export default function NewBillPage() {
                   <td colSpan={2} style={{ ...grandTd, textAlign: "right", padding: "5px 8px" }}>Bill Total :</td>
                   <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
                   <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
+                  <td style={grandTd}></td>
                   <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
                   <td style={grandTd}></td><td style={grandTd}></td>
                   <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
@@ -283,55 +348,47 @@ export default function NewBillPage() {
               </tbody>
             </table>
 
-            {/* Footer */}
+            {/* Footer — Jama Balance only */}
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
               <tbody>
                 <tr>
-                  {/* Left payments */}
-                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "55%" }}>
+                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0 }}>
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <tbody>
-                        {pays.map((p, i) => (
-                          <tr key={p.id}>
-                            <td style={{ borderRight: "1px solid #000", borderBottom: "1px solid #ddd", width: 72 }}>
-                              <input type="text" value={p.amount} onChange={e => upP(i, "amount", e.target.value)} style={{ ...inp, textAlign: "right" }} placeholder="" />
-                            </td>
-                            <td style={{ borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={p.label} onChange={e => upP(i, "label", e.target.value)} style={{ ...inp, textAlign: "left" }} placeholder="Name / description" />
-                            </td>
-                            <td style={{ borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", width: 78 }}>
-                              <input type="text" value={p.voucherNo || ""} onChange={e => upP(i, "voucherNo", e.target.value)} style={{ ...inp, textAlign: "left" }} placeholder="Ref no." />
-                            </td>
-                          </tr>
-                        ))}
-                        <tr><td colSpan={3} style={{ padding: "1px 6px" }}>
-                          <button type="button" onClick={() => setPays(p => [...p, makePayment()])} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: 10, fontFamily: "Courier New, monospace" }}>+ Add row</button>
-                        </td></tr>
-                      </tbody>
-                    </table>
-                  </td>
-                  {/* Right balance */}
-                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "45%" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <tbody>
-                        {[
-                          { label: "Paid Cash", val: paidCash, set: setPaidCash },
-                          { label: "Receipt Cash", val: rcptCash, set: setRcptCash },
-                          { label: "Previous Balance", val: prevBal, set: setPrevBal },
-                        ].map(({ label, val, set }) => (
-                          <tr key={label}>
-                            <td style={{ padding: "2px 8px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>{label}</td>
-                            <td style={{ padding: "1px 4px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={val} onChange={e => set(e.target.value)} style={{ ...inp, textAlign: "right" }} />
-                            </td>
-                          </tr>
-                        ))}
-                        <tr style={{ background: "#f5f5f5" }}>
-                          <td style={{ padding: "4px 8px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5 }}>Closing Balance</td>
-                          <td style={{ padding: "2px 4px" }}>
-                            <input type="text" value={closBal} onChange={e => setClosBal(e.target.value)} style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12 }} />
+                        <tr>
+                          <td colSpan={2} style={{ padding: "2px 10px", background: "#fef9e7", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: "bold", color: "#92400e", letterSpacing: 0.5 }}>FINE GOLD JAMA (grams)</td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>Previous Jama</td>
+                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                            <input type="text" value={prevJamaGold > 0 ? prevJamaGold.toFixed(3) : "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#fef9e7", cursor: "default", color: prevJamaGold > 0 ? "#b45309" : "#666" }} />
                           </td>
                         </tr>
+                        <tr>
+                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Fine Gold</td>
+                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                            <input type="text" value={tF || "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#e8f5e9", cursor: "default" }} />
+                          </td>
+                        </tr>
+                        <tr style={{ background: "#fff3cd" }}>
+                          <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#856404" }}>Closing Jama Gold</td>
+                          <td style={{ padding: "2px 6px" }}>
+                            <input type="text" value={closingJamaGold.toFixed(3)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12, background: "#fff3cd", cursor: "default", color: "#856404" }} />
+                          </td>
+                        </tr>
+                        {/* Net Cash (Amount column sum) */}
+                        {(() => {
+                          const netAmt = [...issue, ...recv].reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
+                          if (netAmt === 0) return null;
+                          return (
+                            <tr style={{ borderTop: "2px solid #ddd" }}>
+                              <td style={{ padding: "3px 10px", fontFamily: "Courier New, monospace", fontSize: 11 }}>Net Cash (₹)</td>
+                              <td style={{ padding: "2px 6px" }}>
+                                <input type="text" value={(netAmt >= 0 ? "+" : "") + netAmt.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 11.5, cursor: "default", color: netAmt >= 0 ? "#166534" : "#b91c1c", background: netAmt >= 0 ? "#f0fdf4" : "#fef2f2" }} />
+                              </td>
+                            </tr>
+                          );
+                        })()}
                       </tbody>
                     </table>
                   </td>

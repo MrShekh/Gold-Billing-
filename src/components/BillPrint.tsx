@@ -127,6 +127,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <th style={{ ...S.th, width: 28 }}>Pcs</th>
               <th style={{ ...S.th, width: 55 }}>Gross<br />Weight</th>
               <th style={{ ...S.th, width: 42 }}>Less<br />Weight</th>
+              <th style={{ ...S.th, width: 80, textAlign: "left" }}>Description</th>
               <th style={{ ...S.th, width: 55 }}>Net<br />Weight</th>
               <th style={{ ...S.th, width: 48 }}>Tunch<br />%</th>
               <th style={{ ...S.th, width: 38 }}>Rate</th>
@@ -160,6 +161,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
                 <td style={S.td}>{item.pcs || ""}</td>
                 <td style={S.td}>{item.grossWeight || ""}</td>
                 <td style={S.td}>{item.lessWeight || ""}</td>
+                <td style={S.tdLeft}>{item.description || ""}</td>
                 <td style={S.td}>{item.netWeight || ""}</td>
                 <td style={S.td}>{item.tunch || ""}</td>
                 <td style={S.td}>{item.rate || ""}</td>
@@ -170,19 +172,10 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
             <tr style={S.totalRow}>
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
-              <td
-                colSpan={2}
-                style={{
-                  ...S.td,
-                  ...S.totalRow,
-                  textAlign: "right",
-                  paddingRight: 8,
-                }}
-              >
-                Issue - Total :
-              </td>
+              <td colSpan={2} style={{ ...S.td, ...S.totalRow, textAlign: "right", paddingRight: 8 }}>Issue - Total :</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.issueTotalGross || ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.issueTotalLess || ""}</td>
+              <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.issueTotalNet || ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
@@ -215,6 +208,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
                 <td style={S.td}>{item.pcs || ""}</td>
                 <td style={S.td}>{item.grossWeight || ""}</td>
                 <td style={S.td}>{item.lessWeight || ""}</td>
+                <td style={S.tdLeft}>{item.description || ""}</td>
                 <td style={S.td}>{item.netWeight || ""}</td>
                 <td style={S.td}>{item.tunch || ""}</td>
                 <td style={S.td}>{item.rate || ""}</td>
@@ -225,19 +219,10 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
             <tr style={S.totalRow}>
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
-              <td
-                colSpan={2}
-                style={{
-                  ...S.td,
-                  ...S.totalRow,
-                  textAlign: "right",
-                  paddingRight: 8,
-                }}
-              >
-                Receive - Total :
-              </td>
+              <td colSpan={2} style={{ ...S.td, ...S.totalRow, textAlign: "right", paddingRight: 8 }}>Receive - Total :</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.recvTotalGross || ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.recvTotalLess || ""}</td>
+              <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.recvTotalNet || ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
@@ -247,19 +232,10 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
             <tr style={S.grandTotal}>
               <td style={{ ...S.td, ...S.grandTotal }}></td>
               <td style={{ ...S.td, ...S.grandTotal }}></td>
-              <td
-                colSpan={2}
-                style={{
-                  ...S.td,
-                  ...S.grandTotal,
-                  textAlign: "right",
-                  paddingRight: 8,
-                }}
-              >
-                Bill Total :
-              </td>
+              <td colSpan={2} style={{ ...S.td, ...S.grandTotal, textAlign: "right", paddingRight: 8 }}>Bill Total :</td>
               <td style={{ ...S.td, ...S.grandTotal }}>{bill.billTotalGross || ""}</td>
               <td style={{ ...S.td, ...S.grandTotal }}>{bill.billTotalLess || ""}</td>
+              <td style={{ ...S.td, ...S.grandTotal }}></td>
               <td style={{ ...S.td, ...S.grandTotal }}>{bill.billTotalNet || ""}</td>
               <td style={{ ...S.td, ...S.grandTotal }}></td>
               <td style={{ ...S.td, ...S.grandTotal }}></td>
@@ -279,172 +255,47 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
         >
           <tbody>
             <tr>
-              {/* Left: payment entries */}
-              <td
-                style={{
-                  border: "1px solid #000",
-                  verticalAlign: "top",
-                  padding: 0,
-                  width: "55%",
-                }}
-              >
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <tbody>
-                    {(bill.payments || []).map((p) => (
-                      <tr key={p.id}>
-                        <td
-                          style={{
-                            borderRight: "1px solid #000",
-                            borderBottom: "1px solid #ccc",
-                            padding: "2px 6px",
-                            textAlign: "right",
-                            width: 75,
-                            fontSize: 10.5,
-                          }}
-                        >
-                          {p.amount || ""}
-                        </td>
-                        <td
-                          style={{
-                            borderBottom: "1px solid #ccc",
-                            padding: "2px 6px",
-                            fontSize: 10.5,
-                          }}
-                        >
-                          {p.label}
-                          {p.date ? `  ${fmtDate(p.date)}` : ""}
-                          {p.voucherNo ? `  ${p.voucherNo}` : ""}
-                        </td>
-                      </tr>
-                    ))}
-                    {/* empty filler rows */}
-                    {Array.from({
-                      length: Math.max(0, 4 - (bill.payments || []).length),
-                    }).map((_, i) => (
-                      <tr key={`empty-${i}`}>
-                        <td
-                          style={{
-                            borderRight: "1px solid #000",
-                            borderBottom: "1px solid #ccc",
-                            padding: "2px 6px",
-                            height: 18,
-                            width: 75,
-                          }}
-                        ></td>
-                        <td
-                          style={{
-                            borderBottom: "1px solid #ccc",
-                            padding: "2px 6px",
-                          }}
-                        ></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </td>
+              {/* Jama Balance — full width */}
+              <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0 }}>
 
-              {/* Right: balance summary */}
-              <td
-                style={{
-                  border: "1px solid #000",
-                  verticalAlign: "top",
-                  padding: 0,
-                  width: "45%",
-                }}
-              >
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
-                    {bill.paidCash !== undefined && (
-                      <tr>
-                        <td
-                          style={{
-                            padding: "2px 8px",
-                            borderBottom: "1px solid #ccc",
-                            fontSize: 10.5,
-                          }}
-                        >
-                          Paid Cash
-                        </td>
-                        <td
-                          style={{
-                            padding: "2px 8px",
-                            borderBottom: "1px solid #ccc",
-                            textAlign: "right",
-                            fontSize: 10.5,
-                          }}
-                        >
-                          {bill.paidCash || ""}
-                        </td>
-                      </tr>
-                    )}
-                    {bill.receiptCash !== undefined && (
-                      <tr>
-                        <td
-                          style={{
-                            padding: "2px 8px",
-                            borderBottom: "1px solid #ccc",
-                            fontSize: 10.5,
-                          }}
-                        >
-                          Receipt Cash
-                        </td>
-                        <td
-                          style={{
-                            padding: "2px 8px",
-                            borderBottom: "1px solid #ccc",
-                            textAlign: "right",
-                            fontSize: 10.5,
-                          }}
-                        >
-                          {bill.receiptCash || ""}
-                        </td>
-                      </tr>
-                    )}
-                    {/* Previous Balance */}
                     <tr>
-                      <td
-                        style={{
-                          padding: "2px 8px",
-                          borderBottom: "1px solid #ccc",
-                          fontSize: 10.5,
-                        }}
-                      >
-                        Previous Balance
-                      </td>
-                      <td
-                        style={{
-                          padding: "2px 8px",
-                          borderBottom: "1px solid #ccc",
-                          textAlign: "right",
-                          fontWeight: "bold",
-                          fontSize: 10.5,
-                        }}
-                      >
-                        {bill.previousBalance !== undefined ? bill.previousBalance : ""}
+                      <td colSpan={2} style={{ padding: "2px 10px", background: "#fef9e7", borderBottom: "1px solid #ddd", fontSize: 9.5, fontWeight: "bold", color: "#92400e", letterSpacing: 0.4 }}>
+                        FINE GOLD JAMA (grams)
                       </td>
                     </tr>
-                    {/* Closing Balance */}
-                    <tr style={{ background: "#f5f5f5" }}>
-                      <td
-                        style={{
-                          padding: "3px 8px",
-                          fontWeight: "bold",
-                          fontSize: 11,
-                        }}
-                      >
-                        Closing Balance
-                      </td>
-                      <td
-                        style={{
-                          padding: "3px 8px",
-                          textAlign: "right",
-                          fontWeight: "bold",
-                          fontSize: 11,
-                        }}
-                      >
-                        {bill.closingBalance !== undefined ? bill.closingBalance : ""}
+                    <tr>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5, width: "50%" }}>Previous Jama</td>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5, color: parseFloat(bill.prevFineGold ?? "0") > 0 ? "#b45309" : "#555" }}>
+                        {bill.prevFineGold ? parseFloat(bill.prevFineGold).toFixed(3) : "0.000"} g
                       </td>
                     </tr>
+                    <tr>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5 }}>This Bill Fine Gold</td>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5 }}>
+                        {bill.billTotalFine ? parseFloat(bill.billTotalFine).toFixed(3) : "0.000"} g
+                      </td>
+                    </tr>
+                    <tr style={{ background: "#fff3cd" }}>
+                      <td style={{ padding: "3px 10px", fontWeight: "bold", fontSize: 11, color: "#856404" }}>Closing Jama Gold</td>
+                      <td style={{ padding: "3px 10px", textAlign: "right", fontWeight: "bold", fontSize: 11, color: "#856404" }}>
+                        {bill.closingFineGold ? parseFloat(bill.closingFineGold).toFixed(3) : "0.000"} g
+                      </td>
+                    </tr>
+                    {/* Net Cash (sum of all item amounts) */}
+                    {(() => {
+                      const netAmt = (bill.items || []).reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
+                      if (netAmt === 0) return null;
+                      return (
+                        <tr style={{ borderTop: "2px solid #ddd" }}>
+                          <td style={{ padding: "2px 10px", fontSize: 10.5, width: "50%" }}>Net Cash (₹)</td>
+                          <td style={{ padding: "2px 10px", textAlign: "right", fontWeight: "bold", fontSize: 11, color: netAmt >= 0 ? "#166534" : "#b91c1c" }}>
+                            {netAmt >= 0 ? "+" : ""}{netAmt.toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })()}
                   </tbody>
                 </table>
               </td>
