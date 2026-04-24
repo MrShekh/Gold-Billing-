@@ -129,10 +129,14 @@ export default function NewBillPage() {
     setTF(fmt(diff(iF, rF)));
   }, [iG, iL, iN, iF, rG, rL, rN, rF]);
 
-  // Jama fine gold = previous (from DB) + this bill's net fine gold
+  // Jama fine gold & cash = previous (from DB) + this bill's net amount
   const prevJamaGold    = jamaBalance?.fine_gold_balance ?? 0;
   const currentBillGold = parseFloat(tF) || 0;
   const closingJamaGold = prevJamaGold + currentBillGold;
+
+  const prevJamaCash    = jamaBalance?.cash_balance ?? 0;
+  const currentBillCash = issue.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0) - recv.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
+  const closingJamaCash = prevJamaCash + currentBillCash;
 
   const tInp = (val: string | undefined, onChange: (v: string) => void, bold?: boolean, readOnly?: boolean) => (
     <input
@@ -352,7 +356,7 @@ export default function NewBillPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
               <tbody>
                 <tr>
-                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0 }}>
+                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <tbody>
                         <tr>
@@ -376,19 +380,33 @@ export default function NewBillPage() {
                             <input type="text" value={closingJamaGold.toFixed(3)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12, background: "#fff3cd", cursor: "default", color: "#856404" }} />
                           </td>
                         </tr>
-                        {/* Net Cash (Amount column sum) */}
-                        {(() => {
-                          const netAmt = [...issue, ...recv].reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
-                          if (netAmt === 0) return null;
-                          return (
-                            <tr style={{ borderTop: "2px solid #ddd" }}>
-                              <td style={{ padding: "3px 10px", fontFamily: "Courier New, monospace", fontSize: 11 }}>Net Cash (₹)</td>
-                              <td style={{ padding: "2px 6px" }}>
-                                <input type="text" value={(netAmt >= 0 ? "+" : "") + netAmt.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 11.5, cursor: "default", color: netAmt >= 0 ? "#166534" : "#b91c1c", background: netAmt >= 0 ? "#f0fdf4" : "#fef2f2" }} />
-                              </td>
-                            </tr>
-                          );
-                        })()}
+                      </tbody>
+                    </table>
+                  </td>
+                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <tbody>
+                        <tr>
+                          <td colSpan={2} style={{ padding: "2px 10px", background: "#f0fdf4", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: "bold", color: "#166534", letterSpacing: 0.5 }}>CASH JAMA (₹)</td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>Previous Jama</td>
+                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                            <input type="text" value={prevJamaCash > 0 ? prevJamaCash.toFixed(2) : "0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: prevJamaCash > 0 ? "#15803d" : "#666" }} />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Net Cash</td>
+                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                            <input type="text" value={(currentBillCash >= 0 ? "+" : "") + currentBillCash.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", background: "#e8f5e9", cursor: "default", color: currentBillCash >= 0 ? "#166534" : "#b91c1c" }} />
+                          </td>
+                        </tr>
+                        <tr style={{ background: "#dcfce7" }}>
+                          <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#166534" }}>Closing Jama Cash</td>
+                          <td style={{ padding: "2px 6px" }}>
+                            <input type="text" value={closingJamaCash.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12, background: "#dcfce7", cursor: "default", color: "#166534" }} />
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </td>

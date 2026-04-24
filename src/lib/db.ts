@@ -197,13 +197,14 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
   const prevFineGoldNum  = prevBalance?.fine_gold_balance ?? 0;
   const prevCashNum      = prevBalance?.cash_balance      ?? 0;
 
-  // Current bill fine gold (ISSUE rows only)
-  const billFineGold = data.items
-    .filter(i => i.type === "ISSUE")
-    .reduce((sum, i) => sum + (parseFloat(i.fineGold ?? "0") || 0), 0);
-  // Net cash from item amount column (positive = due, negative = credit/subtract)
-  const billCash = data.items
-    .reduce((sum, i) => sum + (parseFloat(i.amount ?? "0") || 0), 0);
+  // Current bill fine gold and cash (Issue - Receive)
+  const issueFineGold = data.items.filter(i => i.type === "ISSUE").reduce((sum, i) => sum + (parseFloat(i.fineGold ?? "0") || 0), 0);
+  const recvFineGold = data.items.filter(i => i.type === "RECEIVE").reduce((sum, i) => sum + (parseFloat(i.fineGold ?? "0") || 0), 0);
+  const billFineGold = issueFineGold - recvFineGold;
+
+  const issueCash = data.items.filter(i => i.type === "ISSUE").reduce((sum, i) => sum + (parseFloat(i.amount ?? "0") || 0), 0);
+  const recvCash = data.items.filter(i => i.type === "RECEIVE").reduce((sum, i) => sum + (parseFloat(i.amount ?? "0") || 0), 0);
+  const billCash = issueCash - recvCash;
 
   const closingFineGoldNum = prevFineGoldNum + billFineGold;
   const closingCashNum     = prevCashNum     + billCash;
@@ -213,7 +214,7 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
     customer_id: data.customerId,    customer_name: data.customerName,
     voucher_no: data.voucherNo,      date: data.date,
     paid_cash: data.paidCash,        receipt_cash: data.receiptCash,
-    previous_balance: data.previousBalance, closing_balance: data.closingBalance,
+    previous_balance: prevCashNum.toFixed(2), closing_balance: closingCashNum.toFixed(2),
     dr_naam: data.drNaam,
     issue_total_gross: data.issueTotalGross, issue_total_less: data.issueTotalLess,
     issue_total_net: data.issueTotalNet,     issue_total_fine: data.issueTotalFine,
@@ -350,14 +351,27 @@ export async function generateVoucherNo(): Promise<string> {
 // ─── DASHBOARD STATS ──────────────────────────────────────────────────────────
 export async function getDashboardStats() {
   const today = new Date().toISOString().slice(0, 10);
-  const [{ count: totalCustomers }, { count: totalBills }, { count: todayBills }] = await Promise.all([
+  const [{ count: totalCustomers }, { count: totalBills }, { count: todayBills }, { data: balances }] = await Promise.all([
     supabase.from("customers").select("*", { count: "exact", head: true }),
     supabase.from("bills").select("*", { count: "exact", head: true }),
     supabase.from("bills").select("*", { count: "exact", head: true }).eq("date", today),
+    supabase.from("customer_balance").select("fine_gold_balance, cash_balance"),
   ]);
+
+  let totalJamaGold = 0;
+  let totalJamaCash = 0;
+  if (balances) {
+    for (const b of balances) {
+      if (b.fine_gold_balance > 0) totalJamaGold += Number(b.fine_gold_balance);
+      if (b.cash_balance > 0) totalJamaCash += Number(b.cash_balance);
+    }
+  }
+
   return {
     totalCustomers: totalCustomers ?? 0,
     totalBills:     totalBills     ?? 0,
     todayBills:     todayBills     ?? 0,
+    totalJamaGold,
+    totalJamaCash,
   };
 }

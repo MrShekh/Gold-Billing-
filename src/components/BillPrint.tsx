@@ -255,9 +255,8 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
         >
           <tbody>
             <tr>
-              {/* Jama Balance — full width */}
-              <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0 }}>
-
+              {/* Jama Balance — Gold & Cash */}
+              <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
                     <tr>
@@ -283,19 +282,40 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
                         {bill.closingFineGold ? parseFloat(bill.closingFineGold).toFixed(3) : "0.000"} g
                       </td>
                     </tr>
-                    {/* Net Cash (sum of all item amounts) */}
-                    {(() => {
-                      const netAmt = (bill.items || []).reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
-                      if (netAmt === 0) return null;
-                      return (
-                        <tr style={{ borderTop: "2px solid #ddd" }}>
-                          <td style={{ padding: "2px 10px", fontSize: 10.5, width: "50%" }}>Net Cash (₹)</td>
-                          <td style={{ padding: "2px 10px", textAlign: "right", fontWeight: "bold", fontSize: 11, color: netAmt >= 0 ? "#166534" : "#b91c1c" }}>
+                  </tbody>
+                </table>
+              </td>
+              <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <tbody>
+                    <tr>
+                      <td colSpan={2} style={{ padding: "2px 10px", background: "#f0fdf4", borderBottom: "1px solid #ddd", fontSize: 9.5, fontWeight: "bold", color: "#166534", letterSpacing: 0.4 }}>
+                        CASH JAMA (₹)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5, width: "50%" }}>Previous Jama</td>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5, color: parseFloat(bill.previousBalance ?? "0") > 0 ? "#15803d" : "#555" }}>
+                        {bill.previousBalance ? parseFloat(bill.previousBalance).toFixed(2) : "0.00"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5 }}>This Bill Net Cash</td>
+                      {(() => {
+                        const netAmt = (bill.items || []).reduce((sum, item) => sum + (item.type === "ISSUE" ? 1 : -1) * (parseFloat(item.amount ?? "0") || 0), 0);
+                        return (
+                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5, color: netAmt >= 0 ? "#166534" : "#b91c1c" }}>
                             {netAmt >= 0 ? "+" : ""}{netAmt.toFixed(2)}
                           </td>
-                        </tr>
-                      );
-                    })()}
+                        );
+                      })()}
+                    </tr>
+                    <tr style={{ background: "#dcfce7" }}>
+                      <td style={{ padding: "3px 10px", fontWeight: "bold", fontSize: 11, color: "#166534" }}>Closing Jama Cash</td>
+                      <td style={{ padding: "3px 10px", textAlign: "right", fontWeight: "bold", fontSize: 11, color: "#166534" }}>
+                        {bill.closingBalance ? parseFloat(bill.closingBalance).toFixed(2) : "0.00"}
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </td>

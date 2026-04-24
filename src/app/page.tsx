@@ -8,7 +8,7 @@ import type { Bill, Customer } from "@/lib/db";
 import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp } from "lucide-react";
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({ totalCustomers: 0, totalBills: 0, todayBills: 0 });
+  const [stats, setStats] = useState({ totalCustomers: 0, totalBills: 0, todayBills: 0, totalJamaGold: 0, totalJamaCash: 0 });
   const [recentBills, setRecentBills] = useState<Bill[]>([]);
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
 
@@ -68,6 +68,19 @@ export default function DashboardPage() {
                 <div className="flex-between mb-2"><span className="stat-label">Today&apos;s Bills</span><div className="stat-icon"><CalendarDays size={18} /></div></div>
                 <div className="stat-value">{stats.todayBills}</div>
                 <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Created today</p>
+              </div>
+            </div>
+
+            <div className="grid-2 mb-4">
+              <div className="stat-card" style={{ borderColor: "rgba(212,168,67,0.3)" }}>
+                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Total Gold Jama</span><div className="stat-icon"><TrendingUp size={18} /></div></div>
+                <div className="stat-value" style={{ fontSize: 32 }}>{stats.totalJamaGold.toFixed(3)} g</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding across all customers</p>
+              </div>
+              <div className="stat-card" style={{ borderColor: "rgba(76,175,125,0.3)" }}>
+                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--success)" }}>Total Cash Jama</span><div className="stat-icon" style={{ color: "var(--success)", background: "rgba(76,175,125,0.15)", borderColor: "rgba(76,175,125,0.3)" }}>₹</div></div>
+                <div className="stat-value" style={{ fontSize: 32, color: "var(--success)" }}>₹{stats.totalJamaCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding across all customers</p>
               </div>
             </div>
 
