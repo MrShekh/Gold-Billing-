@@ -13,8 +13,8 @@ function makeItem(type: "ISSUE" | "RECEIVE"): BillItem {
 const th: React.CSSProperties = { border: "1px solid #000", padding: "3px 4px", background: "#f0f0f0", fontFamily: "Courier New, monospace", fontSize: 10.5, fontWeight: "bold", textAlign: "center", lineHeight: 1.2, verticalAlign: "middle" };
 const td: React.CSSProperties = { border: "1px solid #000", padding: 0, margin: 0, verticalAlign: "middle" };
 const inp: React.CSSProperties = { width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#000", padding: "3px 4px", textAlign: "center" };
-const totalTd: React.CSSProperties = { ...td, background: "#f7f7f7", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11, textAlign: "center", padding: "3px 4px" };
-const grandTd: React.CSSProperties = { ...td, background: "#e8e8e8", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 12, textAlign: "center", padding: "4px 4px" };
+const totalTd: React.CSSProperties = { ...td, background: "#f7f7f7", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 13, textAlign: "center", padding: "4px 4px" };
+const grandTd: React.CSSProperties = { ...td, background: "#e8e8e8", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 14, textAlign: "center", padding: "5px 4px" };
 
 export default function NewBillPage() {
   const router = useRouter();
@@ -289,12 +289,12 @@ export default function NewBillPage() {
                 <tr>
                   <td style={totalTd}></td><td style={totalTd}></td>
                   <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Issue - Total :</td>
-                  <td style={td}><input type="text" value={iG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={iL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={totalTd}></td>
-                  <td style={td}><input type="text" value={iN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={totalTd}></td><td style={totalTd}></td>
-                  <td style={td}><input type="text" value={iF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={{ border: "none" }}></td>
                 </tr>
 
@@ -329,24 +329,24 @@ export default function NewBillPage() {
                 <tr>
                   <td style={totalTd}></td><td style={totalTd}></td>
                   <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Receive - Total :</td>
-                  <td style={td}><input type="text" value={rG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={rL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={totalTd}></td>
-                  <td style={td}><input type="text" value={rN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={totalTd}></td><td style={totalTd}></td>
-                  <td style={td}><input type="text" value={rF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={{ border: "none" }}></td>
                 </tr>
                 {/* Bill Total */}
                 <tr>
                   <td style={grandTd}></td><td style={grandTd}></td>
                   <td colSpan={2} style={{ ...grandTd, textAlign: "right", padding: "5px 8px" }}>Bill Total :</td>
-                  <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
                   <td style={grandTd}></td>
-                  <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
                   <td style={grandTd}></td><td style={grandTd}></td>
-                  <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
                   <td style={{ border: "none" }}></td>
                 </tr>
               </tbody>
@@ -356,33 +356,6 @@ export default function NewBillPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
               <tbody>
                 <tr>
-                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <tbody>
-                        <tr>
-                          <td colSpan={2} style={{ padding: "2px 10px", background: "#fef9e7", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: "bold", color: "#92400e", letterSpacing: 0.5 }}>FINE GOLD JAMA (grams)</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>Previous Jama</td>
-                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                            <input type="text" value={prevJamaGold > 0 ? prevJamaGold.toFixed(3) : "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#fef9e7", cursor: "default", color: prevJamaGold > 0 ? "#b45309" : "#666" }} />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Fine Gold</td>
-                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                            <input type="text" value={tF || "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#e8f5e9", cursor: "default" }} />
-                          </td>
-                        </tr>
-                        <tr style={{ background: "#fff3cd" }}>
-                          <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#856404" }}>Closing Jama Gold</td>
-                          <td style={{ padding: "2px 6px" }}>
-                            <input type="text" value={closingJamaGold.toFixed(3)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12, background: "#fff3cd", cursor: "default", color: "#856404" }} />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
                   <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <tbody>
@@ -410,22 +383,38 @@ export default function NewBillPage() {
                       </tbody>
                     </table>
                   </td>
+                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                      <tbody>
+                        <tr>
+                          <td colSpan={2} style={{ padding: "2px 10px", background: "#fef9e7", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: "bold", color: "#92400e", letterSpacing: 0.5 }}>FINE GOLD JAMA (grams)</td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>Previous Jama</td>
+                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                            <input type="text" value={prevJamaGold > 0 ? prevJamaGold.toFixed(3) : "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#fef9e7", cursor: "default", color: prevJamaGold > 0 ? "#b45309" : "#666" }} />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Fine Gold</td>
+                          <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                            <input type="text" value={tF || "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#e8f5e9", cursor: "default" }} />
+                          </td>
+                        </tr>
+                        <tr style={{ background: "#fff3cd" }}>
+                          <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#856404" }}>Closing Jama Gold</td>
+                          <td style={{ padding: "2px 6px" }}>
+                            <input type="text" value={closingJamaGold.toFixed(3)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12, background: "#fff3cd", cursor: "default", color: "#856404" }} />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
                 </tr>
               </tbody>
             </table>
 
-            {/* Dr/Naam */}
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <tbody>
-                <tr>
-                  <td style={{ border: "1px solid #000", padding: "3px 8px", width: "20%", fontWeight: "bold", fontFamily: "Courier New, monospace" }}>Dr/Naam</td>
-                  <td style={{ border: "1px solid #000", padding: 0 }}>
-                    <input type="text" value={drNaam} onChange={e => setDrNaam(e.target.value)} style={{ ...inp, textAlign: "left" }} />
-                  </td>
-                  <td style={{ border: "1px solid #000", padding: "3px 8px", width: "20%", fontWeight: "bold", fontFamily: "Courier New, monospace", textAlign: "right" }}>Dr/Naam</td>
-                </tr>
-              </tbody>
-            </table>
+
             </div>
           </div>
 

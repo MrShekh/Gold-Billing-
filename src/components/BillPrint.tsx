@@ -51,11 +51,12 @@ const S: Record<string, React.CSSProperties> = {
   totalRow: {
     fontWeight: "bold",
     background: "#f5f5f5",
+    fontSize: 12.5,
   },
   grandTotal: {
     fontWeight: "bold",
     background: "#e8e8e8",
-    fontSize: 11.5,
+    fontSize: 13.5,
   },
 };
 
@@ -255,36 +256,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
         >
           <tbody>
             <tr>
-              {/* Jama Balance — Gold & Cash */}
-              <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <tbody>
-                    <tr>
-                      <td colSpan={2} style={{ padding: "2px 10px", background: "#fef9e7", borderBottom: "1px solid #ddd", fontSize: 9.5, fontWeight: "bold", color: "#92400e", letterSpacing: 0.4 }}>
-                        FINE GOLD JAMA (grams)
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5, width: "50%" }}>Previous Jama</td>
-                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5, color: parseFloat(bill.prevFineGold ?? "0") > 0 ? "#b45309" : "#555" }}>
-                        {bill.prevFineGold ? parseFloat(bill.prevFineGold).toFixed(3) : "0.000"} g
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5 }}>This Bill Fine Gold</td>
-                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5 }}>
-                        {bill.billTotalFine ? parseFloat(bill.billTotalFine).toFixed(3) : "0.000"} g
-                      </td>
-                    </tr>
-                    <tr style={{ background: "#fff3cd" }}>
-                      <td style={{ padding: "3px 10px", fontWeight: "bold", fontSize: 11, color: "#856404" }}>Closing Jama Gold</td>
-                      <td style={{ padding: "3px 10px", textAlign: "right", fontWeight: "bold", fontSize: 11, color: "#856404" }}>
-                        {bill.closingFineGold ? parseFloat(bill.closingFineGold).toFixed(3) : "0.000"} g
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </td>
+              {/* Jama Balance — Cash & Gold */}
               <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <tbody>
@@ -319,53 +291,40 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
                   </tbody>
                 </table>
               </td>
+              <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "50%" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <tbody>
+                    <tr>
+                      <td colSpan={2} style={{ padding: "2px 10px", background: "#fef9e7", borderBottom: "1px solid #ddd", fontSize: 9.5, fontWeight: "bold", color: "#92400e", letterSpacing: 0.4 }}>
+                        FINE GOLD JAMA (grams)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5, width: "50%" }}>Previous Jama</td>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5, color: parseFloat(bill.prevFineGold ?? "0") > 0 ? "#b45309" : "#555" }}>
+                        {bill.prevFineGold ? parseFloat(bill.prevFineGold).toFixed(3) : "0.000"} g
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", fontSize: 10.5 }}>This Bill Fine Gold</td>
+                      <td style={{ padding: "2px 10px", borderBottom: "1px solid #ccc", textAlign: "right", fontSize: 10.5 }}>
+                        {bill.billTotalFine ? parseFloat(bill.billTotalFine).toFixed(3) : "0.000"} g
+                      </td>
+                    </tr>
+                    <tr style={{ background: "#fff3cd" }}>
+                      <td style={{ padding: "3px 10px", fontWeight: "bold", fontSize: 11, color: "#856404" }}>Closing Jama Gold</td>
+                      <td style={{ padding: "3px 10px", textAlign: "right", fontWeight: "bold", fontSize: 11, color: "#856404" }}>
+                        {bill.closingFineGold ? parseFloat(bill.closingFineGold).toFixed(3) : "0.000"} g
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
             </tr>
           </tbody>
         </table>
 
-        {/* ---- DR/NAAM ROW ---- */}
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: 0,
-            fontSize: 11,
-          }}
-        >
-          <tbody>
-            <tr>
-              <td
-                style={{
-                  border: "1px solid #000",
-                  padding: "3px 8px",
-                  width: "20%",
-                  fontWeight: "bold",
-                }}
-              >
-                Dr/Naam
-              </td>
-              <td
-                style={{
-                  border: "1px solid #000",
-                  padding: "3px 8px",
-                }}
-              >
-                {bill.drNaam || ""}
-              </td>
-              <td
-                style={{
-                  border: "1px solid #000",
-                  padding: "3px 8px",
-                  width: "20%",
-                  fontWeight: "bold",
-                  textAlign: "right",
-                }}
-              >
-                Dr/Naam
-              </td>
-            </tr>
-          </tbody>
-        </table>
+
       </div>
     </div>
   );
