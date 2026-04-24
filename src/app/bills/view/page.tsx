@@ -17,19 +17,43 @@ function BillDetailContent() {
   const billRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = () => {
-    const element = billRef.current;
-    if (!element) return;
-    
-    import("html2pdf.js").then((html2pdf) => {
-      const opt = {
-        margin: 0.5,
-        filename: `bill-${bill?.voucherNo}.pdf`,
-        image: { type: "jpeg" as "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "in" as "in", format: "a4" as "a4", orientation: "portrait" as "portrait" },
-      };
-      html2pdf.default().set(opt).from(element).save();
-    });
+    if (!bill) return;
+    const printArea = billRef.current?.querySelector(".print-area") as HTMLElement | null;
+    if (!printArea) return;
+
+    // Open a new window with ONLY the bill content (no sidebar, no dark page)
+    const printWindow = window.open("", "_blank", "width=1100,height=800");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Bill-${bill.voucherNo}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 0; background: #fff; font-family: 'Courier New', monospace; }
+            @page { size: A4 landscape; margin: 0.5cm; }
+            .print-btn-bar { text-align: center; padding: 10px; background: #f5f5f5; border-bottom: 1px solid #ddd; }
+            .print-btn-bar button { padding: 8px 24px; font-size: 14px; cursor: pointer; background: #2c6b2f; color: #fff; border: none; border-radius: 4px; }
+            @media print { .print-btn-bar { display: none !important; } }
+          </style>
+        </head>
+        <body>
+          <div class="print-btn-bar">
+            <button onclick="window.print()">🖨️ Save as PDF / Print</button>
+            <span style="margin-left:12px; font-size:12px; color:#666;">Click the button above → in the print dialog choose <b>Save as PDF</b></span>
+          </div>
+          ${printArea.outerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    // Slight delay to allow rendering before print dialog
+    setTimeout(() => {
+      printWindow.print();
+    }, 600);
   };
 
   useEffect(() => {

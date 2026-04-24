@@ -19,44 +19,45 @@ const S: Record<string, React.CSSProperties> = {
   table: {
     width: "100%",
     borderCollapse: "collapse",
-    fontSize: 11,
+    tableLayout: "fixed" as const,
+    fontSize: 10,
     fontFamily: "'Courier New', Courier, monospace",
   },
   th: {
     border: "1px solid #000",
-    padding: "3px 5px",
+    padding: "2px 3px",
     textAlign: "center",
     fontWeight: "bold",
     background: "#fff",
-    fontSize: 10.5,
+    fontSize: 9,
     verticalAlign: "middle",
     lineHeight: 1.2,
   },
   td: {
     border: "1px solid #000",
-    padding: "2px 5px",
+    padding: "2px 3px",
     textAlign: "center",
     verticalAlign: "middle",
-    fontSize: 11,
+    fontSize: 9.5,
     lineHeight: 1.3,
   },
   tdLeft: {
     border: "1px solid #000",
-    padding: "2px 5px",
+    padding: "2px 3px",
     textAlign: "left",
     verticalAlign: "middle",
-    fontSize: 11,
+    fontSize: 9.5,
     lineHeight: 1.3,
   },
   totalRow: {
     fontWeight: "bold",
     background: "#f5f5f5",
-    fontSize: 14,
+    fontSize: 11,
   },
   grandTotal: {
     fontWeight: "bold",
     background: "#e8e8e8",
-    fontSize: 15,
+    fontSize: 12,
   },
 };
 
@@ -122,18 +123,18 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
         <table style={S.table}>
           <thead>
             <tr>
-              <th style={{ ...S.th, width: 28 }}>S.No</th>
-              <th style={{ ...S.th, width: 52 }}>Amount</th>
-              <th style={{ ...S.th, textAlign: "left" }}>Item Name</th>
-              <th style={{ ...S.th, width: 28 }}>Pcs</th>
-              <th style={{ ...S.th, width: 55 }}>Gross<br />Weight</th>
-              <th style={{ ...S.th, width: 42 }}>AD<br />Weight</th>
-              <th style={{ ...S.th, width: 42 }}>Less<br />Weight</th>
-              <th style={{ ...S.th, width: 80, textAlign: "left" }}>Description</th>
-              <th style={{ ...S.th, width: 55 }}>Net<br />Weight</th>
-              <th style={{ ...S.th, width: 48 }}>Tunch<br />%</th>
-              <th style={{ ...S.th, width: 38 }}>Rate</th>
-              <th style={{ ...S.th, width: 55 }}>Fine<br />Gold</th>
+              <th style={{ ...S.th, width: "3%" }}>S.No</th>
+              <th style={{ ...S.th, width: "8%" }}>Amount</th>
+              <th style={{ ...S.th, width: "20%", textAlign: "left" }}>Item Name</th>
+              <th style={{ ...S.th, width: "4%" }}>Pcs</th>
+              <th style={{ ...S.th, width: "8%" }}>Gross<br />Weight</th>
+              <th style={{ ...S.th, width: "6%" }}>AD<br />Weight</th>
+              <th style={{ ...S.th, width: "6%" }}>Less<br />Weight</th>
+              <th style={{ ...S.th, width: "12%", textAlign: "left" }}>Description</th>
+              <th style={{ ...S.th, width: "8%" }}>Net<br />Weight</th>
+              <th style={{ ...S.th, width: "8%" }}>Tunch<br />%</th>
+              <th style={{ ...S.th, width: "6%" }}>Rate</th>
+              <th style={{ ...S.th, width: "9%" }}>Fine<br />Gold</th>
             </tr>
           </thead>
           <tbody>
@@ -144,6 +145,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={{ ...S.tdLeft }}>
                 <span style={{ fontWeight: "bold", textDecoration: "underline" }}>ISSUE</span>
               </td>
+              <td style={{ ...S.td }}></td>
               <td style={{ ...S.td }}></td>
               <td style={{ ...S.td }}></td>
               <td style={{ ...S.td }}></td>
@@ -194,6 +196,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={S.tdLeft}>
                 <span style={{ fontWeight: "bold", textDecoration: "underline" }}>RECEIVE</span>
               </td>
+              <td style={S.td}></td>
               <td style={S.td}></td>
               <td style={S.td}></td>
               <td style={S.td}></td>

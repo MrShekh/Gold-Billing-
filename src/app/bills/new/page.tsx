@@ -7,7 +7,7 @@ import { PlusCircle, Trash2, Save, Scale } from "lucide-react";
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function makeItem(type: "ISSUE" | "RECEIVE"): BillItem {
-  return { id: uid(), type, sno: 1, itemName: "", grossWeight: "", lessWeight: "", description: "", netWeight: "", tunch: "", rate: "", fineGold: "", pcs: "", amount: "" };
+  return { id: uid(), type, sno: 1, itemName: "", grossWeight: "", adWeight: "", lessWeight: "", description: "", netWeight: "", tunch: "", rate: "", fineGold: "", pcs: "", amount: "" };
 }
 
 const th: React.CSSProperties = { border: "1px solid #000", padding: "3px 4px", background: "#f0f0f0", fontFamily: "Courier New, monospace", fontSize: 10.5, fontWeight: "bold", textAlign: "center", lineHeight: 1.2, verticalAlign: "middle" };
@@ -269,8 +269,8 @@ export default function NewBillPage() {
                 <tr>
                   <td style={td}></td><td style={td}></td>
                   <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>ISSUE</span></td>
-                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
-                  <td style={{ border: "none", textAlign: "center" }}>
+                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
+                  <td style={{ border: "none", textAlign: "center", paddingLeft: 4 }}>
                     <button type="button" onClick={() => setIssue(p => [...p, makeItem("ISSUE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#4caf7d" }}><PlusCircle size={15} /></button>
                   </td>
                 </tr>
@@ -312,7 +312,7 @@ export default function NewBillPage() {
                   <td style={td}></td><td style={td}></td>
                   <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>RECEIVE</span></td>
                   <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
-                  <td style={{ border: "none", textAlign: "center" }}>
+                  <td style={{ border: "none", textAlign: "center", paddingLeft: 4 }}>
                     <button type="button" onClick={() => setRecv(p => [...p, makeItem("RECEIVE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a" }}><PlusCircle size={15} /></button>
                   </td>
                 </tr>

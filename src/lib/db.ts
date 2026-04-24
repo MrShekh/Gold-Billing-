@@ -230,13 +230,14 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
   if (error) { console.error(error); return null; }
 
   if (data.items.length > 0) {
-    await supabase.from("bill_items").insert(data.items.map(i => ({
+    const { error: itemsError } = await supabase.from("bill_items").insert(data.items.map(i => ({
       bill_id: row.id, type: i.type, sno: i.sno, item_name: i.itemName,
-      pcs: i.pcs, gross_weight: i.grossWeight, ad_weight: i.adWeight, less_weight: i.lessWeight,
+      pcs: i.pcs, gross_weight: i.grossWeight, ad_weight: i.adWeight ?? "", less_weight: i.lessWeight,
       description: i.description,
       net_weight: i.netWeight, tunch: i.tunch, rate: i.rate,
       fine_gold: i.fineGold, amount: i.amount,
     })));
+    if (itemsError) { console.error("bill_items insert error:", itemsError); }
   }
   if (data.payments.length > 0) {
     await supabase.from("payment_entries").insert(data.payments.map(p => ({
