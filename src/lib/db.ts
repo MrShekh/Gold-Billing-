@@ -25,6 +25,7 @@ export interface BillItem {
   itemName: string;
   pcs?: string;
   grossWeight?: string;
+  adWeight?: string;
   lessWeight?: string;
   description?: string;
   netWeight?: string;
@@ -146,7 +147,7 @@ function mapItemRow(r: Record<string, string>): BillItem {
   return {
     id: r.id, type: r.type as "ISSUE" | "RECEIVE", sno: Number(r.sno),
     itemName: r.item_name, pcs: r.pcs, grossWeight: r.gross_weight,
-    lessWeight: r.less_weight, description: r.description,
+    adWeight: r.ad_weight, lessWeight: r.less_weight, description: r.description,
     netWeight: r.net_weight,
     tunch: r.tunch, rate: r.rate, fineGold: r.fine_gold, amount: r.amount,
   };
@@ -231,7 +232,7 @@ export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bil
   if (data.items.length > 0) {
     await supabase.from("bill_items").insert(data.items.map(i => ({
       bill_id: row.id, type: i.type, sno: i.sno, item_name: i.itemName,
-      pcs: i.pcs, gross_weight: i.grossWeight, less_weight: i.lessWeight,
+      pcs: i.pcs, gross_weight: i.grossWeight, ad_weight: i.adWeight, less_weight: i.lessWeight,
       description: i.description,
       net_weight: i.netWeight, tunch: i.tunch, rate: i.rate,
       fine_gold: i.fineGold, amount: i.amount,
@@ -282,7 +283,7 @@ export async function updateBill(id: string, data: Omit<Bill, "id" | "createdAt"
   if (data.items.length > 0) {
     await supabase.from("bill_items").insert(data.items.map(i => ({
       bill_id: id, type: i.type, sno: i.sno, item_name: i.itemName,
-      pcs: i.pcs, gross_weight: i.grossWeight, less_weight: i.lessWeight,
+      pcs: i.pcs, gross_weight: i.grossWeight, ad_weight: i.adWeight, less_weight: i.lessWeight,
       description: i.description,
       net_weight: i.netWeight, tunch: i.tunch, rate: i.rate,
       fine_gold: i.fineGold, amount: i.amount,

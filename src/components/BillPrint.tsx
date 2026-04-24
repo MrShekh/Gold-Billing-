@@ -51,12 +51,12 @@ const S: Record<string, React.CSSProperties> = {
   totalRow: {
     fontWeight: "bold",
     background: "#f5f5f5",
-    fontSize: 12.5,
+    fontSize: 14,
   },
   grandTotal: {
     fontWeight: "bold",
     background: "#e8e8e8",
-    fontSize: 13.5,
+    fontSize: 15,
   },
 };
 
@@ -127,6 +127,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <th style={{ ...S.th, textAlign: "left" }}>Item Name</th>
               <th style={{ ...S.th, width: 28 }}>Pcs</th>
               <th style={{ ...S.th, width: 55 }}>Gross<br />Weight</th>
+              <th style={{ ...S.th, width: 42 }}>AD<br />Weight</th>
               <th style={{ ...S.th, width: 42 }}>Less<br />Weight</th>
               <th style={{ ...S.th, width: 80, textAlign: "left" }}>Description</th>
               <th style={{ ...S.th, width: 55 }}>Net<br />Weight</th>
@@ -150,6 +151,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={{ ...S.td }}></td>
               <td style={{ ...S.td }}></td>
               <td style={{ ...S.td }}></td>
+              <td style={{ ...S.td }}></td>
             </tr>
 
             {issueItems.map((item, idx) => (
@@ -161,6 +163,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
                 </td>
                 <td style={S.td}>{item.pcs || ""}</td>
                 <td style={S.td}>{item.grossWeight || ""}</td>
+                <td style={S.td}>{item.adWeight || ""}</td>
                 <td style={S.td}>{item.lessWeight || ""}</td>
                 <td style={S.tdLeft}>{item.description || ""}</td>
                 <td style={S.td}>{item.netWeight || ""}</td>
@@ -175,6 +178,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td colSpan={2} style={{ ...S.td, ...S.totalRow, textAlign: "right", paddingRight: 8 }}>Issue - Total :</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.issueTotalGross || ""}</td>
+              <td style={{ ...S.td, ...S.totalRow }}>{issueItems.reduce((acc, item) => acc + (parseFloat(item.adWeight || "0") || 0), 0) > 0 ? issueItems.reduce((acc, item) => acc + (parseFloat(item.adWeight || "0") || 0), 0).toFixed(3) : ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.issueTotalLess || ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.issueTotalNet || ""}</td>
@@ -197,6 +201,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={S.td}></td>
               <td style={S.td}></td>
               <td style={S.td}></td>
+              <td style={S.td}></td>
             </tr>
 
             {receiveItems.map((item, idx) => (
@@ -208,6 +213,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
                 </td>
                 <td style={S.td}>{item.pcs || ""}</td>
                 <td style={S.td}>{item.grossWeight || ""}</td>
+                <td style={S.td}>{item.adWeight || ""}</td>
                 <td style={S.td}>{item.lessWeight || ""}</td>
                 <td style={S.tdLeft}>{item.description || ""}</td>
                 <td style={S.td}>{item.netWeight || ""}</td>
@@ -222,6 +228,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td colSpan={2} style={{ ...S.td, ...S.totalRow, textAlign: "right", paddingRight: 8 }}>Receive - Total :</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.recvTotalGross || ""}</td>
+              <td style={{ ...S.td, ...S.totalRow }}>{receiveItems.reduce((acc, item) => acc + (parseFloat(item.adWeight || "0") || 0), 0) > 0 ? receiveItems.reduce((acc, item) => acc + (parseFloat(item.adWeight || "0") || 0), 0).toFixed(3) : ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.recvTotalLess || ""}</td>
               <td style={{ ...S.td, ...S.totalRow }}></td>
               <td style={{ ...S.td, ...S.totalRow }}>{bill.recvTotalNet || ""}</td>
@@ -235,6 +242,12 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={{ ...S.td, ...S.grandTotal }}></td>
               <td colSpan={2} style={{ ...S.td, ...S.grandTotal, textAlign: "right", paddingRight: 8 }}>Bill Total :</td>
               <td style={{ ...S.td, ...S.grandTotal }}>{bill.billTotalGross || ""}</td>
+              <td style={{ ...S.td, ...S.grandTotal }}>{(() => {
+                const iA = issueItems.reduce((acc, item) => acc + (parseFloat(item.adWeight || "0") || 0), 0);
+                const rA = receiveItems.reduce((acc, item) => acc + (parseFloat(item.adWeight || "0") || 0), 0);
+                const diff = iA - rA;
+                return diff !== 0 ? diff.toFixed(3) : "";
+              })()}</td>
               <td style={{ ...S.td, ...S.grandTotal }}>{bill.billTotalLess || ""}</td>
               <td style={{ ...S.td, ...S.grandTotal }}></td>
               <td style={{ ...S.td, ...S.grandTotal }}>{bill.billTotalNet || ""}</td>
@@ -312,8 +325,8 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
                       </td>
                     </tr>
                     <tr style={{ background: "#fff3cd" }}>
-                      <td style={{ padding: "3px 10px", fontWeight: "bold", fontSize: 11, color: "#856404" }}>Closing Jama Gold</td>
-                      <td style={{ padding: "3px 10px", textAlign: "right", fontWeight: "bold", fontSize: 11, color: "#856404" }}>
+                      <td style={{ padding: "3px 10px", fontWeight: "bold", fontSize: 13, color: "#856404" }}>Closing Jama Gold</td>
+                      <td style={{ padding: "3px 10px", textAlign: "right", fontWeight: "bold", fontSize: 14, color: "#856404" }}>
                         {bill.closingFineGold ? parseFloat(bill.closingFineGold).toFixed(3) : "0.000"} g
                       </td>
                     </tr>
