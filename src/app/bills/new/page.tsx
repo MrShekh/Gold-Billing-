@@ -250,17 +250,17 @@ export default function NewBillPage() {
               <thead>
                 <tr>
                   <th style={{ ...th, width: 28 }}>S.No</th>
-                  <th style={{ ...th, width: 58 }}>Amount</th>
+                  <th style={{ ...th, width: 66 }}>Amount</th>
                   <th style={{ ...th, textAlign: "left" }}>Item Name</th>
                   <th style={{ ...th, width: 32 }}>Pcs</th>
-                  <th style={{ ...th, width: 62 }}>Gross<br/>Weight</th>
-                  <th style={{ ...th, width: 42 }}>AD<br/>Weight</th>
-                  <th style={{ ...th, width: 52 }}>Less<br/>Weight</th>
+                  <th style={{ ...th, width: 74 }}>Gross<br/>Weight</th>
+                  <th style={{ ...th, width: 62 }}>AD<br/>Weight</th>
+                  <th style={{ ...th, width: 64 }}>Less<br/>Weight</th>
                   <th style={{ ...th, width: 90, textAlign: "left" }}>Description</th>
-                  <th style={{ ...th, width: 62 }}>Net<br/>Weight</th>
-                  <th style={{ ...th, width: 52 }}>Tunch<br/>%</th>
-                  <th style={{ ...th, width: 44 }}>Rate</th>
-                  <th style={{ ...th, width: 62 }}>Fine<br/>Gold</th>
+                  <th style={{ ...th, width: 74 }}>Net<br/>Weight</th>
+                  <th style={{ ...th, width: 56 }}>Tunch<br/>%</th>
+                  <th style={{ ...th, width: 52 }}>Rate</th>
+                  <th style={{ ...th, width: 74 }}>Fine<br/>Gold</th>
                   <th style={{ width: 24, border: "none", background: "#fff" }}></th>
                 </tr>
               </thead>

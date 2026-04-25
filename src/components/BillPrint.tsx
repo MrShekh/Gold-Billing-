@@ -125,15 +125,15 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
             <tr>
               <th style={{ ...S.th, width: "3%" }}>S.No</th>
               <th style={{ ...S.th, width: "8%" }}>Amount</th>
-              <th style={{ ...S.th, width: "20%", textAlign: "left" }}>Item Name</th>
+              <th style={{ ...S.th, width: "16%", textAlign: "left" }}>Item Name</th>
               <th style={{ ...S.th, width: "4%" }}>Pcs</th>
-              <th style={{ ...S.th, width: "8%" }}>Gross<br />Weight</th>
-              <th style={{ ...S.th, width: "6%" }}>AD<br />Weight</th>
-              <th style={{ ...S.th, width: "6%" }}>Less<br />Weight</th>
-              <th style={{ ...S.th, width: "12%", textAlign: "left" }}>Description</th>
-              <th style={{ ...S.th, width: "8%" }}>Net<br />Weight</th>
-              <th style={{ ...S.th, width: "8%" }}>Tunch<br />%</th>
-              <th style={{ ...S.th, width: "6%" }}>Rate</th>
+              <th style={{ ...S.th, width: "9%" }}>Gross<br />Weight</th>
+              <th style={{ ...S.th, width: "8%" }}>AD<br />Weight</th>
+              <th style={{ ...S.th, width: "8%" }}>Less<br />Weight</th>
+              <th style={{ ...S.th, width: "11%", textAlign: "left" }}>Description</th>
+              <th style={{ ...S.th, width: "9%" }}>Net<br />Weight</th>
+              <th style={{ ...S.th, width: "7%" }}>Tunch<br />%</th>
+              <th style={{ ...S.th, width: "7%" }}>Rate</th>
               <th style={{ ...S.th, width: "9%" }}>Fine<br />Gold</th>
             </tr>
           </thead>
