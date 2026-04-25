@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, FileText, PlusCircle, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, FileText, PlusCircle, LogOut, Menu, X, Settings } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/lib/supabase";
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/bills", label: "Bills", icon: FileText },
   { href: "/bills/new", label: "New Bill", icon: PlusCircle },
+  { href: "/profile", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar() {

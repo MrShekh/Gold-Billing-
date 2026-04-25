@@ -25,39 +25,38 @@ const S: Record<string, React.CSSProperties> = {
   },
   th: {
     border: "1px solid #000",
-    padding: "2px 3px",
+    padding: "6px 4px",
     textAlign: "center",
     fontWeight: "bold",
     background: "#fff",
-    fontSize: 9,
+    fontSize: 10,
     verticalAlign: "middle",
-    lineHeight: 1.2,
   },
   td: {
     border: "1px solid #000",
-    padding: "2px 3px",
+    padding: "6px 4px",
     textAlign: "center",
     verticalAlign: "middle",
-    fontSize: 9.5,
-    lineHeight: 1.3,
+    fontSize: 10.5,
   },
   tdLeft: {
     border: "1px solid #000",
-    padding: "2px 3px",
+    padding: "6px 4px",
     textAlign: "left",
     verticalAlign: "middle",
-    fontSize: 9.5,
-    lineHeight: 1.3,
+    fontSize: 10.5,
   },
   totalRow: {
     fontWeight: "bold",
     background: "#f5f5f5",
     fontSize: 11,
+    padding: "6px 4px",
   },
   grandTotal: {
     fontWeight: "bold",
     background: "#e8e8e8",
     fontSize: 12,
+    padding: "6px 4px",
   },
 };
 
@@ -91,7 +90,8 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
           color: "#000",
           background: "#fff",
           padding: "16px 20px",
-          maxWidth: 780,
+          maxWidth: "none",
+          width: "100%",
           margin: "0 auto",
         }}
       >

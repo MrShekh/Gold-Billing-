@@ -17,6 +17,27 @@ export interface CustomerBalance {
   updated_at: string;
 }
 
+export interface Profile {
+  id: string;
+  business_name: string;
+  owner_name: string;
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  gst_no: string;
+  updated_at: string;
+}
+
+export interface WhatsAppSettings {
+  id: string;
+  phone_number_id: string;
+  access_token: string;
+  template_name: string;
+  template_language: string;
+  enabled: boolean;
+}
+
 export interface BillItem {
   id: string;
   type: "ISSUE" | "RECEIVE";
@@ -78,6 +99,39 @@ export interface Bill {
 async function getUserId(): Promise<string | null> {
   const { data } = await supabase.auth.getUser();
   return data.user?.id ?? null;
+}
+
+// ─── PROFILE & WHATSAPP ───────────────────────────────────────────────────────
+export async function getProfile(): Promise<Profile | null> {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data, error } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+  if (error && error.code !== "PGRST116") { console.error(error); return null; }
+  return data as Profile | null;
+}
+
+export async function updateProfile(data: Partial<Profile>): Promise<Profile | null> {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data: row, error } = await supabase.from("profiles").upsert({ user_id: userId, ...data }, { onConflict: "user_id" }).select().single();
+  if (error) { console.error(error); return null; }
+  return row as Profile;
+}
+
+export async function getWhatsAppSettings(): Promise<WhatsAppSettings | null> {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data, error } = await supabase.from("whatsapp_settings").select("*").eq("user_id", userId).single();
+  if (error && error.code !== "PGRST116") { console.error(error); return null; }
+  return data as WhatsAppSettings | null;
+}
+
+export async function updateWhatsAppSettings(data: Partial<WhatsAppSettings>): Promise<WhatsAppSettings | null> {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data: row, error } = await supabase.from("whatsapp_settings").upsert({ user_id: userId, ...data }, { onConflict: "user_id" }).select().single();
+  if (error) { console.error(error); return null; }
+  return row as WhatsAppSettings;
 }
 
 // ─── CUSTOMERS ────────────────────────────────────────────────────────────────

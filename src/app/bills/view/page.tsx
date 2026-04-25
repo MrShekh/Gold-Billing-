@@ -3,8 +3,9 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import BillPrint from "@/components/BillPrint";
-import { getBillById, type Bill } from "@/lib/db";
+import { getBillById, getCustomerById, type Bill } from "@/lib/db";
 import { ArrowLeft, FileText, Pencil, Download } from "lucide-react";
+import WhatsAppBillButton from "@/components/WhatsAppBillButton";
 
 
 import { Suspense } from "react";
@@ -14,6 +15,7 @@ function BillDetailContent() {
   const id = searchParams.get("id");
   const router = useRouter();
   const [bill, setBill] = useState<Bill | null>(null);
+  const [customerPhone, setCustomerPhone] = useState<string | undefined>(undefined);
   const billRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = () => {
@@ -62,6 +64,10 @@ function BillDetailContent() {
         try {
           const found = await getBillById(id as string);
           setBill(found || null);
+          if (found && found.customerId) {
+            const customer = await getCustomerById(found.customerId);
+            if (customer) setCustomerPhone(customer.phone);
+          }
         } catch (e) {
           console.error(e);
         }
@@ -112,6 +118,13 @@ function BillDetailContent() {
               >
                 <Pencil size={14} /> Edit Bill
               </button>
+              <WhatsAppBillButton
+                billId={bill.id}
+                customerId={bill.customerId}
+                customerPhone={customerPhone}
+                customerName={bill.customerName}
+                voucherNo={bill.voucherNo}
+              />
               <button
                 className="btn btn-secondary"
                 onClick={handleDownload}
@@ -134,7 +147,7 @@ function BillDetailContent() {
             style={{ background: "#1a1a24", border: "1px solid var(--border-light)" }}
           >
             <div className="table-responsive">
-              <div style={{ minWidth: 760 }} ref={billRef}>
+              <div style={{ minWidth: 950 }} ref={billRef}>
                 <BillPrint bill={bill} companyName={bill.customerName.toUpperCase()} />
               </div>
             </div>

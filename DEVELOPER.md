@@ -4,7 +4,7 @@ Welcome to the Developer Guide for the **Gold Billing System**. This document ou
 
 ## 1. Project Overview
 
-The Gold Billing System is a cloud-ready, mobile-responsive application designed for managing customers, issuing/receiving jewellery, tracking weights (gross, less, net, fine gold), and generating precise, print-ready bills. It is built as a web application with Next.js but is configured to be deployed as a mobile application using Capacitor.js.
+The Gold Billing System is a cloud-ready, mobile-responsive application designed for managing customers, issuing/receiving jewellery, tracking weights (gross, AD weight, less, net, fine gold), maintaining running Jama (balance) accounts, and generating precise, print-ready bills. It is built as a web application with Next.js but is configured to be deployed as a mobile application using Capacitor.js.
 
 ## 2. Tech Stack
 
@@ -56,16 +56,26 @@ Complete CRUD functionality for Customers:
 
 ### 4.3. Billing & Invoices
 Comprehensive billing system handling dual transaction types (`ISSUE` and `RECEIVE`).
-- Calculations include: Gross Weight, Less Weight, Net Weight, Tunch (Purity), and Fine Gold.
+- **Columns per item:** S.No, Amount, Item Name, Pcs, Gross Weight, AD Weight, Less Weight, Description, Net Weight, Tunch (Purity %), Rate, Fine Gold.
+- **Auto-calculations:** Net Weight = Gross − AD − Less. Fine Gold = (Net × Tunch) / 100. Section totals and Bill Total (Issue − Receive) auto-compute.
 - **Vouchers:** Auto-incrementing voucher generation (`IR/00001`).
-- **Payments:** Support for Cash Paid, Cash Received, Previous Balance, and Closing Balance.
-- **Print Layout:** Exact paper-size printing using `BillPrint.tsx` and `react-to-print`.
+- **Print Layout:** Exact paper-size printing using `BillPrint.tsx` and `react-to-print`. Columns are sized to fit values up to `100.001` without clipping.
+- **Edit Bill:** Full edit support with all columns (AD Weight, Description, etc.) matching the create bill form.
 
-### 4.4. Dashboard
+### 4.4. Jama Balance System
+Automatic running balance tracking per customer:
+- **Fine Gold Jama:** Tracks cumulative fine gold outstanding (in grams).
+- **Cash Jama:** Tracks cumulative cash outstanding (in ₹).
+- On each new bill, previous Jama is fetched, this bill's net is added, and the closing Jama is saved.
+- Jama balances are displayed on the bill creation form and printed on invoices.
+- Stored in the `customer_balance` table with upsert on `(user_id, customer_id)`.
+
+### 4.5. Dashboard
 Quick overview of business metrics:
 - Total Customers
 - Total Bills
 - Today's Bills
+- Total Jama Gold (grams) and Jama Cash (₹) across all customers
 - Recent Transactions and Customers tables.
 
 ## 5. Database Architecture (Supabase)
@@ -85,18 +95,27 @@ The system relies on a PostgreSQL database hosted on Supabase.
   - `user_id` (UUID, FK to auth.users)
   - `customer_id` (UUID, FK to customers)
   - `customer_name`, `voucher_no`, `date`
-  - Total aggregations (`issue_total_gross`, `recv_total_fine`, etc.)
+  - Total aggregations (`issue_total_gross`, `issue_total_less`, `issue_total_net`, `issue_total_fine`, `recv_total_gross`, `recv_total_less`, `recv_total_net`, `recv_total_fine`, `bill_total_gross`, `bill_total_less`, `bill_total_net`, `bill_total_fine`)
   - Balances (`previous_balance`, `closing_balance`, `dr_naam`, `paid_cash`, `receipt_cash`)
+  - Jama fields (`prev_fine_gold`, `closing_fine_gold`)
 - **`bill_items`**
   - `id` (UUID, PK)
   - `bill_id` (UUID, FK to bills)
   - `type` ("ISSUE" | "RECEIVE")
-  - `item_name`, `pcs`, `gross_weight`, `less_weight`, `net_weight`, `tunch`, `rate`, `fine_gold`, `amount`
+  - `sno`, `item_name`, `pcs`, `gross_weight`, `ad_weight`, `less_weight`, `description`, `net_weight`, `tunch`, `rate`, `fine_gold`, `amount`
 - **`payment_entries`**
   - `id` (UUID, PK)
   - `bill_id` (UUID, FK to bills)
   - `type` ("paid" | "receipt" | "previous")
   - `amount`, `label`, `voucher_no`, `date`
+- **`customer_balance`**
+  - `id` (UUID, PK)
+  - `user_id` (UUID, FK to auth.users)
+  - `customer_id` (UUID, FK to customers)
+  - `fine_gold_balance` (Numeric — grams outstanding)
+  - `cash_balance` (Numeric — ₹ outstanding)
+  - `updated_at` (Timestamp)
+  - Unique constraint on `(user_id, customer_id)`
 
 ## 6. Step-by-Step Developer Setup
 
@@ -144,8 +163,26 @@ npx cap open android
 
 ### Modifying the Print Layout:
 1. Open `src/components/BillPrint.tsx`.
-2. This component uses absolute CSS units (`cm`, `mm`, `pt`) and strict `@media print` rules. Modify classes cautiously.
-3. Test printing on actual paper or PDF preview, ensuring the margins and layout fit standard A4 or custom invoice paper sizes.
+2. This component uses percentage-based column widths (`width: "9%"`, etc.) with `tableLayout: "fixed"` for consistent rendering.
+3. Ensure numeric columns (Gross, AD, Less, Net, Fine Gold) are wide enough to display values like `100.001` without clipping.
+4. Test printing on actual paper or PDF preview, ensuring the margins and layout fit standard A4 landscape or custom invoice paper sizes.
+
+### Column Width Reference:
+All three bill pages (New, Edit, Print) share consistent column sizing:
+| Column       | New/Edit (px) | Print (%) |
+|--------------|---------------|----------|
+| S.No         | 28            | 3%       |
+| Amount       | 66            | 8%       |
+| Item Name    | auto          | 16%      |
+| Pcs          | 32            | 4%       |
+| Gross Weight | 74            | 9%       |
+| AD Weight    | 62            | 8%       |
+| Less Weight  | 64            | 8%       |
+| Description  | 90            | 11%      |
+| Net Weight   | 74            | 9%       |
+| Tunch %      | 56            | 7%       |
+| Rate         | 52            | 7%       |
+| Fine Gold    | 74            | 9%       |
 
 ---
-*End of document.*
+*Last updated: 25 April 2026*
