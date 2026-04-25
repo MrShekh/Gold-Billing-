@@ -7,7 +7,7 @@ import { PlusCircle, Trash2, Save } from "lucide-react";
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function makeItem(type: "ISSUE" | "RECEIVE"): BillItem {
-  return { id: uid(), type, sno: 1, itemName: "", grossWeight: "", lessWeight: "", netWeight: "", tunch: "", rate: "", fineGold: "", pcs: "", amount: "" };
+  return { id: uid(), type, sno: 1, itemName: "", grossWeight: "", adWeight: "", lessWeight: "", description: "", netWeight: "", tunch: "", rate: "", fineGold: "", pcs: "", amount: "" };
 }
 function makePayment(): PaymentEntry {
   return { id: uid(), amount: "", label: "", type: "paid" };
@@ -16,8 +16,8 @@ function makePayment(): PaymentEntry {
 const th: React.CSSProperties = { border: "1px solid #000", padding: "3px 4px", background: "#f0f0f0", fontFamily: "Courier New, monospace", fontSize: 10.5, fontWeight: "bold", textAlign: "center", lineHeight: 1.2, verticalAlign: "middle" };
 const td: React.CSSProperties = { border: "1px solid #000", padding: 0, margin: 0, verticalAlign: "middle" };
 const inp: React.CSSProperties = { width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#000", padding: "3px 4px", textAlign: "center" };
-const totalTd: React.CSSProperties = { ...td, background: "#f7f7f7", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11, textAlign: "center", padding: "3px 4px" };
-const grandTd: React.CSSProperties = { ...td, background: "#e8e8e8", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 12, textAlign: "center", padding: "4px 4px" };
+const totalTd: React.CSSProperties = { ...td, background: "#f7f7f7", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 13, textAlign: "center", padding: "4px 4px" };
+const grandTd: React.CSSProperties = { ...td, background: "#e8e8e8", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 14, textAlign: "center", padding: "5px 4px" };
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -36,9 +36,9 @@ function EditBillContent() {
   const [pays, setPays] = useState<PaymentEntry[]>([makePayment(), makePayment(), makePayment(), makePayment()]);
   
   // Total states
-  const [iG, setIG] = useState(""); const [iL, setIL] = useState(""); const [iN, setIN] = useState(""); const [iF, setIF] = useState("");
-  const [rG, setRG] = useState(""); const [rL, setRL] = useState(""); const [rN, setRN] = useState(""); const [rF, setRF] = useState("");
-  const [tG, setTG] = useState(""); const [tL, setTL] = useState(""); const [tN, setTN] = useState(""); const [tF, setTF] = useState("");
+  const [iG, setIG] = useState(""); const [iA, setIA] = useState(""); const [iL, setIL] = useState(""); const [iN, setIN] = useState(""); const [iF, setIF] = useState("");
+  const [rG, setRG] = useState(""); const [rA, setRA] = useState(""); const [rL, setRL] = useState(""); const [rN, setRN] = useState(""); const [rF, setRF] = useState("");
+  const [tG, setTG] = useState(""); const [tA, setTA] = useState(""); const [tL, setTL] = useState(""); const [tN, setTN] = useState(""); const [tF, setTF] = useState("");
 
   const [paidCash, setPaidCash] = useState("");
   const [rcptCash, setRcptCash] = useState("");
@@ -87,9 +87,10 @@ function EditBillContent() {
   // Auto-calculate net & fine gold when a row field changes
   function calcRow(item: BillItem): BillItem {
     const gross = parseFloat(item.grossWeight ?? "") || 0;
+    const ad    = parseFloat(item.adWeight    ?? "") || 0;
     const less  = parseFloat(item.lessWeight  ?? "") || 0;
     const tunch = parseFloat(item.tunch       ?? "") || 0;
-    const net   = gross - less;
+    const net   = gross - ad - less;
     const fine  = net > 0 && tunch > 0 ? (net * tunch) / 100 : 0;
     return {
       ...item,
@@ -111,10 +112,12 @@ function EditBillContent() {
       arr.reduce((acc, r) => acc + (parseFloat(r[key] as string) || 0), 0);
     const fmt = (n: number) => n > 0 ? n.toFixed(3) : "";
     const grossTotal = sum(issue, "grossWeight");
+    const adTotal    = sum(issue, "adWeight");
     const lessTotal  = sum(issue, "lessWeight");
     setIG(fmt(grossTotal));
+    setIA(fmt(adTotal));
     setIL(fmt(lessTotal));
-    setIN(fmt(grossTotal - lessTotal));  // Gross MINUS Less
+    setIN(fmt(grossTotal - adTotal - lessTotal));
     setIF(fmt(sum(issue, "fineGold")));
   }, [issue]);
 
@@ -123,10 +126,12 @@ function EditBillContent() {
       arr.reduce((acc, r) => acc + (parseFloat(r[key] as string) || 0), 0);
     const fmt = (n: number) => n > 0 ? n.toFixed(3) : "";
     const grossTotal = sum(recv, "grossWeight");
+    const adTotal    = sum(recv, "adWeight");
     const lessTotal  = sum(recv, "lessWeight");
     setRG(fmt(grossTotal));
+    setRA(fmt(adTotal));
     setRL(fmt(lessTotal));
-    setRN(fmt(grossTotal - lessTotal));  // Gross MINUS Less
+    setRN(fmt(grossTotal - adTotal - lessTotal));
     setRF(fmt(sum(recv, "fineGold")));
   }, [recv]);
 
@@ -135,10 +140,11 @@ function EditBillContent() {
     const diff = (a: string, b: string) => (parseFloat(a) || 0) - (parseFloat(b) || 0);
     const fmt  = (n: number) => n.toFixed(3);
     setTG(fmt(diff(iG, rG)));
+    setTA(fmt(diff(iA, rA)));
     setTL(fmt(diff(iL, rL)));
     setTN(fmt(diff(iN, rN)));
     setTF(fmt(diff(iF, rF)));
-  }, [iG, iL, iN, iF, rG, rL, rN, rF]);
+  }, [iG, iA, iL, iN, iF, rG, rA, rL, rN, rF]);
 
   const tInp = (val: string | undefined, onChange: (v: string) => void, bold?: boolean, readOnly?: boolean) => (
     <input
@@ -215,7 +221,9 @@ function EditBillContent() {
                   <th style={{ ...th, textAlign: "left" }}>Item Name</th>
                   <th style={{ ...th, width: 32 }}>Pcs</th>
                   <th style={{ ...th, width: 62 }}>Gross<br/>Weight</th>
+                  <th style={{ ...th, width: 42 }}>AD<br/>Weight</th>
                   <th style={{ ...th, width: 52 }}>Less<br/>Weight</th>
+                  <th style={{ ...th, width: 90, textAlign: "left" }}>Description</th>
                   <th style={{ ...th, width: 62 }}>Net<br/>Weight</th>
                   <th style={{ ...th, width: 52 }}>Tunch<br/>%</th>
                   <th style={{ ...th, width: 44 }}>Rate</th>
@@ -228,7 +236,7 @@ function EditBillContent() {
                 <tr>
                   <td style={td}></td><td style={td}></td>
                   <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>ISSUE</span></td>
-                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
+                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
                   <td style={{ border: "none", textAlign: "center" }}>
                     <button type="button" onClick={() => setIssue(p => [...p, makeItem("ISSUE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#4caf7d" }}><PlusCircle size={15} /></button>
                   </td>
@@ -240,7 +248,9 @@ function EditBillContent() {
                     <td style={td}>{tInp(item.itemName, v => upI(idx, "itemName", v), true)}</td>
                     <td style={td}>{tInp(item.pcs, v => upI(idx, "pcs", v))}</td>
                     <td style={td}>{tInp(item.grossWeight, v => upI(idx, "grossWeight", v))}</td>
+                    <td style={td}>{tInp(item.adWeight, v => upI(idx, "adWeight", v))}</td>
                     <td style={td}>{tInp(item.lessWeight, v => upI(idx, "lessWeight", v))}</td>
+                    <td style={{ ...td, width: 90, maxWidth: 90, textAlign: "left" }}>{tInp(item.description, v => upI(idx, "description", v))}</td>
                     <td style={td}>{tInp(item.netWeight, v => upI(idx, "netWeight", v), false, true)}</td>
                     <td style={td}>{tInp(item.tunch, v => upI(idx, "tunch", v))}</td>
                     <td style={td}>{tInp(item.rate, v => upI(idx, "rate", v))}</td>
@@ -254,11 +264,13 @@ function EditBillContent() {
                 <tr>
                   <td style={totalTd}></td><td style={totalTd}></td>
                   <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Issue - Total :</td>
-                  <td style={td}><input type="text" value={iG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={iL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={iN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iA} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={totalTd}></td>
+                  <td style={td}><input type="text" value={iN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={totalTd}></td><td style={totalTd}></td>
-                  <td style={td}><input type="text" value={iF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={iF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={{ border: "none" }}></td>
                 </tr>
 
@@ -266,7 +278,7 @@ function EditBillContent() {
                 <tr>
                   <td style={td}></td><td style={td}></td>
                   <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>RECEIVE</span></td>
-                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
+                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
                   <td style={{ border: "none", textAlign: "center" }}>
                     <button type="button" onClick={() => setRecv(p => [...p, makeItem("RECEIVE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a" }}><PlusCircle size={15} /></button>
                   </td>
@@ -278,7 +290,9 @@ function EditBillContent() {
                     <td style={td}>{tInp(item.itemName, v => upR(idx, "itemName", v), true)}</td>
                     <td style={td}>{tInp(item.pcs, v => upR(idx, "pcs", v))}</td>
                     <td style={td}>{tInp(item.grossWeight, v => upR(idx, "grossWeight", v))}</td>
+                    <td style={td}>{tInp(item.adWeight, v => upR(idx, "adWeight", v))}</td>
                     <td style={td}>{tInp(item.lessWeight, v => upR(idx, "lessWeight", v))}</td>
+                    <td style={{ ...td, textAlign: "left" }}>{tInp(item.description, v => upR(idx, "description", v))}</td>
                     <td style={td}>{tInp(item.netWeight, v => upR(idx, "netWeight", v), false, true)}</td>
                     <td style={td}>{tInp(item.tunch, v => upR(idx, "tunch", v))}</td>
                     <td style={td}>{tInp(item.rate, v => upR(idx, "rate", v))}</td>
@@ -292,22 +306,26 @@ function EditBillContent() {
                 <tr>
                   <td style={totalTd}></td><td style={totalTd}></td>
                   <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Receive - Total :</td>
-                  <td style={td}><input type="text" value={rG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={rL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={rN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rA} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                  <td style={totalTd}></td>
+                  <td style={td}><input type="text" value={rN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={totalTd}></td><td style={totalTd}></td>
-                  <td style={td}><input type="text" value={rF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={rF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
                   <td style={{ border: "none" }}></td>
                 </tr>
                 {/* Bill Total */}
                 <tr>
                   <td style={grandTd}></td><td style={grandTd}></td>
                   <td colSpan={2} style={{ ...grandTd, textAlign: "right", padding: "5px 8px" }}>Bill Total :</td>
-                  <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tA} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                  <td style={grandTd}></td>
+                  <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
                   <td style={grandTd}></td><td style={grandTd}></td>
-                  <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 12, cursor: "default" }} /></td>
+                  <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
                   <td style={{ border: "none" }}></td>
                 </tr>
               </tbody>
