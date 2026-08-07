@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
+// Supabase has been replaced with MongoDB Atlas.
+// This file is kept as a placeholder to avoid import errors
+// from any files that may still reference it.
+// All database operations now go through /api/* routes backed by MongoDB.
 
-const supabaseUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey  = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = null;

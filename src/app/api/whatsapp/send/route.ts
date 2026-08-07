@@ -1,47 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
+import { connectDB } from "@/lib/mongoose";
+import WhatsAppLog from "@/models/WhatsAppLog";
 
-// Helper to format date "YYYY-MM-DD" -> "DD MMM YYYY"
-function formatDate(d: string) {
-  if (!d) return "";
-  const date = new Date(d);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
+const JWT_SECRET = process.env.JWT_SECRET || "goldbill_secret_change_in_production";
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("Authorization")?.replace("Bearer ", "");
-    
+    const token = req.cookies.get("auth_token")?.value;
+
     if (!token) {
-      return NextResponse.json({ error: "Missing authorization token" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let decoded: { id: string; email: string; username: string };
+    try {
+      decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; username: string };
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
     const { billId, customerId, phone, customerName, billNumber, pdfBuffer } = body;
-    
+
     if (!billId || !phone || !pdfBuffer) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    
-    const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
-    });
-    
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    await connectDB();
 
     // Ensure phone is correctly formatted (strip non-digits)
     const cleanPhone = phone.replace(/\D/g, "");
 
     // Call AM Jwellers WhatsApp Service
-    // In production, this URL should be an environment variable
     const WA_SERVICE_URL = process.env.WHATSAPP_SERVICE_URL || "http://localhost:5001";
-    
+
     const waRes = await fetch(`${WA_SERVICE_URL}/send-bill`, {
       method: "POST",
       headers: {
@@ -63,19 +56,17 @@ export async function POST(req: NextRequest) {
     } else {
       waData = { error: await waRes.text() };
     }
-    
-    // Log it
-    const logEntry = {
-      user_id: user.id,
-      bill_id: billId,
-      customer_id: customerId || null,
+
+    // Log it to MongoDB
+    await WhatsAppLog.create({
+      userId: decoded.id,
+      billId: billId,
+      customerId: customerId || undefined,
       phone: cleanPhone,
-      message_id: waData.messageId || null,
+      messageId: waData.messageId || undefined,
       status: waRes.ok ? "sent" : "failed",
-      error_msg: waRes.ok ? null : (waData.error || "Unknown error")
-    };
-    
-    await supabaseAuth.from("whatsapp_logs").insert([logEntry]);
+      errorMsg: waRes.ok ? undefined : (waData.error || "Unknown error")
+    });
 
     if (!waRes.ok) {
       console.error("WA Service Error:", waData);

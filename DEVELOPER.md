@@ -78,6 +78,12 @@ Quick overview of business metrics:
 - Total Jama Gold (grams) and Jama Cash (₹) across all customers
 - Recent Transactions and Customers tables.
 
+### 4.6. WhatsApp Integration
+Automated dispatch of PDF invoices to customers via WhatsApp:
+- Connects to an external WhatsApp service (e.g., `whatsapp-web.js`).
+- PDF bills are generated dynamically and sent to customers as documents.
+- Maintains `whatsapp_logs` and configurable `whatsapp_settings`.
+
 ## 5. Database Architecture (Supabase)
 
 The system relies on a PostgreSQL database hosted on Supabase.
@@ -116,6 +122,11 @@ The system relies on a PostgreSQL database hosted on Supabase.
   - `cash_balance` (Numeric — ₹ outstanding)
   - `updated_at` (Timestamp)
   - Unique constraint on `(user_id, customer_id)`
+- **`whatsapp_settings`**
+  - `id` (UUID, PK), `user_id` (UUID, FK to auth.users)
+  - Settings and access tokens for the WhatsApp API.
+- **`whatsapp_logs`**
+  - Logs sent messages (`bill_id`, `customer_phone`, `status`, `error_message`).
 
 ## 6. Step-by-Step Developer Setup
 
@@ -124,6 +135,8 @@ Create a `.env.local` file in the root directory.
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+WHATSAPP_SERVICE_URL=http://localhost:5001
 ```
 
 ### Step 2: Install Dependencies

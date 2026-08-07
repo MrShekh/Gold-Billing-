@@ -20,7 +20,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     </div>
   );
 
-  if (!user) return null; // redirecting
+  if (!user) return null;
 
   return <>{children}</>;
 }

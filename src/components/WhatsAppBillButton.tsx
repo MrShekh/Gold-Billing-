@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { MessageCircle, CheckCircle, AlertCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -41,36 +40,32 @@ export default function WhatsAppBillButton({ billId, customerId, customerPhone, 
       // Temporarily adjust styles for better PDF capture if needed
       const originalTransform = printElement.style.transform;
       printElement.style.transform = "none";
-      
+
       const canvas = await html2canvas(printElement, {
         scale: 2, // Higher quality
         useCORS: true,
         logging: false
       });
-      
+
       printElement.style.transform = originalTransform;
 
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
-      
+
       // A4 landscape dimensions: 297mm x 210mm
       const pdf = new jsPDF("landscape", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-      
+
       // Get base64 string without the data URL prefix
       const pdfBase64 = pdf.output("datauristring").split(",")[1];
 
       // 2. Send to our API
-      const { data: session } = await supabase.auth.getSession();
-      const token = session?.session?.access_token;
-
       const res = await fetch("/api/whatsapp/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           billId,
@@ -103,8 +98,8 @@ export default function WhatsAppBillButton({ billId, customerId, customerPhone, 
 
   if (!customerPhone) {
     return (
-      <button 
-        className="btn" 
+      <button
+        className="btn"
         style={{ background: "#ccc", color: "#666", cursor: "not-allowed", display: "flex", alignItems: "center", gap: 6 }}
         title="Add customer phone number to enable"
       >
@@ -123,23 +118,23 @@ export default function WhatsAppBillButton({ billId, customerId, customerPhone, 
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <button 
-        className="btn" 
+      <button
+        className="btn"
         onClick={handleSend}
         disabled={loading}
-        style={{ 
-          background: "#25D366", 
-          color: "#fff", 
+        style={{
+          background: "#25D366",
+          color: "#fff",
           border: "none",
-          display: "flex", 
-          alignItems: "center", 
+          display: "flex",
+          alignItems: "center",
           gap: 6,
           opacity: loading ? 0.7 : 1
         }}
       >
         <MessageCircle size={15} /> {loading ? "Generating PDF..." : "WhatsApp"}
       </button>
-      
+
       {status === "error" && (
         <span style={{ color: "var(--danger)", fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
           <AlertCircle size={12} /> {errorMsg}

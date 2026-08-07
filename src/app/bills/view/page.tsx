@@ -5,7 +5,6 @@ import Sidebar from "@/components/Sidebar";
 import BillPrint from "@/components/BillPrint";
 import { getBillById, getCustomerById, type Bill } from "@/lib/db";
 import { ArrowLeft, FileText, Pencil, Download } from "lucide-react";
-import WhatsAppBillButton from "@/components/WhatsAppBillButton";
 
 
 import { Suspense } from "react";
@@ -118,13 +117,6 @@ function BillDetailContent() {
               >
                 <Pencil size={14} /> Edit Bill
               </button>
-              <WhatsAppBillButton
-                billId={bill.id}
-                customerId={bill.customerId}
-                customerPhone={customerPhone}
-                customerName={bill.customerName}
-                voucherNo={bill.voucherNo}
-              />
               <button
                 className="btn btn-secondary"
                 onClick={handleDownload}

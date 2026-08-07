@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "export",   // Required for Capacitor (static HTML export)
-  trailingSlash: true,
+  // API routes need dynamic rendering — static export disabled
   images: { unoptimized: true },
 };
 
