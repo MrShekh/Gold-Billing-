@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import BillModel from "@/models/Bill";
+import CustomerBalanceModel from "@/models/CustomerBalance";
 
 function mapBill(b: Record<string, unknown>) {
     return {
@@ -29,6 +30,40 @@ function mapBill(b: Record<string, unknown>) {
             amount: p.amount, label: p.label, type: p.type, voucherNo: p.voucherNo, date: p.date,
         })),
     };
+}
+
+// ── Helper: recalculate customer balance from all their remaining bills ────────
+async function recalcCustomerBalance(customerId: string) {
+    const remainingBills = await BillModel.find({ customerId }).lean() as any[];
+
+    let totalFineGold = 0;
+    let totalCash = 0;
+
+    for (const bill of remainingBills) {
+        const items = (bill.items ?? []) as any[];
+        for (const item of items) {
+            const fineGold = parseFloat(item.fineGold ?? "0") || 0;
+            const amount = parseFloat(item.amount ?? "0") || 0;
+            if (item.type === "ISSUE") {
+                totalFineGold += fineGold;
+                totalCash += amount;
+            } else {
+                totalFineGold -= fineGold;
+                totalCash -= amount;
+            }
+        }
+    }
+
+    if (remainingBills.length === 0) {
+        // No bills left — remove balance record entirely
+        await CustomerBalanceModel.deleteOne({ customerId });
+    } else {
+        await CustomerBalanceModel.findOneAndUpdate(
+            { customerId },
+            { fineGoldBalance: totalFineGold, cashBalance: totalCash },
+            { upsert: true, new: true }
+        );
+    }
 }
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -62,7 +97,19 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
     try {
         await connectDB();
         const { id } = await context.params;
+
+        // Find bill first so we know which customer to update
+        const bill = await BillModel.findById(id).lean() as any;
+        if (!bill) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+        const customerId = bill.customerId as string;
+
+        // Delete the bill
         await BillModel.findByIdAndDelete(id);
+
+        // Recalculate customer balance from remaining bills
+        await recalcCustomerBalance(customerId);
+
         return NextResponse.json({ success: true });
     } catch (err) {
         console.error(err);

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import CustomerModel from "@/models/Customer";
+import CustomerBalanceModel from "@/models/CustomerBalance";
+import BillModel from "@/models/Bill";
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
@@ -33,7 +35,16 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
     try {
         await connectDB();
         const { id } = await context.params;
+
+        // Delete the customer
         await CustomerModel.findByIdAndDelete(id);
+
+        // Delete all their bills
+        await BillModel.deleteMany({ customerId: id });
+
+        // Delete their jama balance record
+        await CustomerBalanceModel.deleteOne({ customerId: id });
+
         return NextResponse.json({ success: true });
     } catch (err) {
         console.error(err);
