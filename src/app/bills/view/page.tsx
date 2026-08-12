@@ -107,7 +107,7 @@ function BillDetailContent() {
               <h2>Bill — {bill.voucherNo}</h2>
               <p style={{ marginTop: 4 }}>
                 Customer: <strong style={{ color: "var(--text-primary)" }}>{bill.customerName}</strong>
-                &nbsp;·&nbsp; Date: {bill.date.split("-").reverse().join("/")}
+                &nbsp;·&nbsp; Date: {bill.date.split("-").reverse().join("/")}{bill.time ? ` ${bill.time}` : ""}
               </p>
             </div>
             <div className="flex gap-2">

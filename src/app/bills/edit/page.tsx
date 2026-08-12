@@ -31,10 +31,11 @@ function EditBillContent() {
   const [vno, setVno] = useState("");
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [time, setTime] = useState("");
   const [issue, setIssue] = useState<BillItem[]>([makeItem("ISSUE")]);
   const [recv, setRecv] = useState<BillItem[]>([makeItem("RECEIVE")]);
   const [pays, setPays] = useState<PaymentEntry[]>([makePayment(), makePayment(), makePayment(), makePayment()]);
-  
+
   // Total states
   const [iG, setIG] = useState(""); const [iA, setIA] = useState(""); const [iL, setIL] = useState(""); const [iN, setIN] = useState(""); const [iF, setIF] = useState("");
   const [rG, setRG] = useState(""); const [rA, setRA] = useState(""); const [rL, setRL] = useState(""); const [rN, setRN] = useState(""); const [rF, setRF] = useState("");
@@ -59,14 +60,15 @@ function EditBillContent() {
             setCid(b.customerId);
             setVno(b.voucherNo);
             setDate(b.date);
+            setTime(b.time || "");
             if (b.items) {
-               const i = b.items.filter(x => x.type === "ISSUE");
-               if (i.length) setIssue(i);
-               const r = b.items.filter(x => x.type === "RECEIVE");
-               if (r.length) setRecv(r);
+              const i = b.items.filter(x => x.type === "ISSUE");
+              if (i.length) setIssue(i);
+              const r = b.items.filter(x => x.type === "RECEIVE");
+              if (r.length) setRecv(r);
             }
             if (b.payments && b.payments.length) {
-               setPays(b.payments.length < 4 ? [...b.payments, ...Array.from({length: 4 - b.payments.length}).map(() => makePayment())] : b.payments);
+              setPays(b.payments.length < 4 ? [...b.payments, ...Array.from({ length: 4 - b.payments.length }).map(() => makePayment())] : b.payments);
             }
             setPaidCash(b.paidCash || "");
             setRcptCash(b.receiptCash || "");
@@ -87,15 +89,15 @@ function EditBillContent() {
   // Auto-calculate net & fine gold when a row field changes
   function calcRow(item: BillItem): BillItem {
     const gross = parseFloat(item.grossWeight ?? "") || 0;
-    const ad    = parseFloat(item.adWeight    ?? "") || 0;
-    const less  = parseFloat(item.lessWeight  ?? "") || 0;
-    const tunch = parseFloat(item.tunch       ?? "") || 0;
-    const net   = gross - ad - less;
-    const fine  = net > 0 && tunch > 0 ? (net * tunch) / 100 : 0;
+    const ad = parseFloat(item.adWeight ?? "") || 0;
+    const less = parseFloat(item.lessWeight ?? "") || 0;
+    const tunch = parseFloat(item.tunch ?? "") || 0;
+    const net = gross - ad - less;
+    const fine = net > 0 && tunch > 0 ? (net * tunch) / 100 : 0;
     return {
       ...item,
-      netWeight: net  > 0 ? net.toFixed(3)  : item.netWeight,
-      fineGold:  fine > 0 ? fine.toFixed(3) : item.fineGold,
+      netWeight: net > 0 ? net.toFixed(3) : item.netWeight,
+      fineGold: fine > 0 ? fine.toFixed(3) : item.fineGold,
     };
   }
 
@@ -112,8 +114,8 @@ function EditBillContent() {
       arr.reduce((acc, r) => acc + (parseFloat(r[key] as string) || 0), 0);
     const fmt = (n: number) => n > 0 ? n.toFixed(3) : "";
     const grossTotal = sum(issue, "grossWeight");
-    const adTotal    = sum(issue, "adWeight");
-    const lessTotal  = sum(issue, "lessWeight");
+    const adTotal = sum(issue, "adWeight");
+    const lessTotal = sum(issue, "lessWeight");
     setIG(fmt(grossTotal));
     setIA(fmt(adTotal));
     setIL(fmt(lessTotal));
@@ -126,8 +128,8 @@ function EditBillContent() {
       arr.reduce((acc, r) => acc + (parseFloat(r[key] as string) || 0), 0);
     const fmt = (n: number) => n > 0 ? n.toFixed(3) : "";
     const grossTotal = sum(recv, "grossWeight");
-    const adTotal    = sum(recv, "adWeight");
-    const lessTotal  = sum(recv, "lessWeight");
+    const adTotal = sum(recv, "adWeight");
+    const lessTotal = sum(recv, "lessWeight");
     setRG(fmt(grossTotal));
     setRA(fmt(adTotal));
     setRL(fmt(lessTotal));
@@ -138,7 +140,7 @@ function EditBillContent() {
   // Bill Total = Issue − Receive
   useEffect(() => {
     const diff = (a: string, b: string) => (parseFloat(a) || 0) - (parseFloat(b) || 0);
-    const fmt  = (n: number) => n.toFixed(3);
+    const fmt = (n: number) => n.toFixed(3);
     setTG(fmt(diff(iG, rG)));
     setTA(fmt(diff(iA, rA)));
     setTL(fmt(diff(iL, rL)));
@@ -164,7 +166,7 @@ function EditBillContent() {
     setSaving(true);
     const cust = customers.find(c => c.id === cid)!;
     await updateBill(id as string, {
-      customerId: cid, customerName: cust.name, voucherNo: vno, date,
+      customerId: cid, customerName: cust.name, voucherNo: vno, date, time,
       items: [
         ...issue.filter(i => i.itemName.trim()).map((i, idx) => ({ ...i, sno: idx + 1, type: "ISSUE" as const })),
         ...recv.filter(i => i.itemName.trim()).map((i, idx) => ({ ...i, sno: idx + 1, type: "RECEIVE" as const })),
@@ -196,209 +198,210 @@ function EditBillContent() {
           {/* Paper Bill Wrapper */}
           <div className="table-responsive" style={{ paddingBottom: 16 }}>
             <div style={{ minWidth: 800, background: "#fff", border: "1px solid #bbb", borderRadius: 6, padding: "18px 22px", color: "#000", fontFamily: "Courier New, monospace", boxShadow: "0 4px 24px rgba(0,0,0,0.25)" }}>
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <div>
-                <div style={{ fontSize: 9, color: "#888", marginBottom: 2 }}>CUSTOMER</div>
-                <select value={cid} onChange={e => setCid(e.target.value)}
-                  style={{ fontFamily: "Courier New, monospace", fontSize: 14, fontWeight: "bold", letterSpacing: 1, border: "none", borderBottom: "2px dashed #999", background: "transparent", outline: "none", cursor: "pointer", color: cid ? "#000" : "#aaa" }}>
-                  <option value="">SELECT CUSTOMER ▾</option>
-                  {customers.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
-                </select>
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 9, color: "#888", marginBottom: 2 }}>CUSTOMER</div>
+                  <select value={cid} onChange={e => setCid(e.target.value)}
+                    style={{ fontFamily: "Courier New, monospace", fontSize: 14, fontWeight: "bold", letterSpacing: 1, border: "none", borderBottom: "2px dashed #999", background: "transparent", outline: "none", cursor: "pointer", color: cid ? "#000" : "#aaa" }}>
+                    <option value="">SELECT CUSTOMER ▾</option>
+                    {customers.map(c => <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>)}
+                  </select>
+                </div>
+                <div style={{ textAlign: "right", fontSize: 11.5, lineHeight: 2.1 }}>
+                  <div>V.No.&nbsp;:&nbsp;<input type="text" value={vno} onChange={e => setVno(e.target.value)} style={{ ...inp, width: 100, borderBottom: "1px dashed #aaa", fontWeight: "bold", display: "inline" }} /></div>
+                  <div>Date&nbsp;&nbsp;:&nbsp;<input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ ...inp, width: 120, borderBottom: "1px dashed #aaa", display: "inline" }} /></div>
+                  <div>Time&nbsp;&nbsp;:&nbsp;<input type="time" value={time} onChange={e => setTime(e.target.value)} style={{ ...inp, width: 120, borderBottom: "1px dashed #aaa", display: "inline" }} /></div>
+                </div>
               </div>
-              <div style={{ textAlign: "right", fontSize: 11.5, lineHeight: 2.1 }}>
-                <div>V.No.&nbsp;:&nbsp;<input type="text" value={vno} onChange={e => setVno(e.target.value)} style={{ ...inp, width: 100, borderBottom: "1px dashed #aaa", fontWeight: "bold", display: "inline" }} /></div>
-                <div>Date&nbsp;&nbsp;:&nbsp;<input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ ...inp, width: 120, borderBottom: "1px dashed #aaa", display: "inline" }} /></div>
-              </div>
-            </div>
 
-            {/* Main Table */}
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
-              <thead>
-                <tr>
-                  <th style={{ ...th, width: 28 }}>S.No</th>
-                  <th style={{ ...th, width: 66 }}>Amount</th>
-                  <th style={{ ...th, textAlign: "left" }}>Item Name</th>
-                  <th style={{ ...th, width: 32 }}>Pcs</th>
-                  <th style={{ ...th, width: 74 }}>Gross<br/>Weight</th>
-                  <th style={{ ...th, width: 62 }}>AD<br/>Weight</th>
-                  <th style={{ ...th, width: 64 }}>Less<br/>Weight</th>
-                  <th style={{ ...th, width: 90, textAlign: "left" }}>Description</th>
-                  <th style={{ ...th, width: 74 }}>Net<br/>Weight</th>
-                  <th style={{ ...th, width: 56 }}>Tunch<br/>%</th>
-                  <th style={{ ...th, width: 52 }}>Rate</th>
-                  <th style={{ ...th, width: 74 }}>Fine<br/>Gold</th>
-                  <th style={{ width: 24, border: "none", background: "#fff" }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* ISSUE label row */}
-                <tr>
-                  <td style={td}></td><td style={td}></td>
-                  <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>ISSUE</span></td>
-                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
-                  <td style={{ border: "none", textAlign: "center" }}>
-                    <button type="button" onClick={() => setIssue(p => [...p, makeItem("ISSUE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#4caf7d" }}><PlusCircle size={15} /></button>
-                  </td>
-                </tr>
-                {issue.map((item, idx) => (
-                  <tr key={item.id}>
-                    <td style={{ ...td, textAlign: "center", fontSize: 11, padding: "2px 2px" }}>{idx + 1}</td>
-                    <td style={td}>{tInp(item.amount, v => upI(idx, "amount", v))}</td>
-                    <td style={td}>{tInp(item.itemName, v => upI(idx, "itemName", v), true)}</td>
-                    <td style={td}>{tInp(item.pcs, v => upI(idx, "pcs", v))}</td>
-                    <td style={td}>{tInp(item.grossWeight, v => upI(idx, "grossWeight", v))}</td>
-                    <td style={td}>{tInp(item.adWeight, v => upI(idx, "adWeight", v))}</td>
-                    <td style={td}>{tInp(item.lessWeight, v => upI(idx, "lessWeight", v))}</td>
-                    <td style={{ ...td, width: 90, maxWidth: 90, textAlign: "left" }}>{tInp(item.description, v => upI(idx, "description", v))}</td>
-                    <td style={td}>{tInp(item.netWeight, v => upI(idx, "netWeight", v), false, true)}</td>
-                    <td style={td}>{tInp(item.tunch, v => upI(idx, "tunch", v))}</td>
-                    <td style={td}>{tInp(item.rate, v => upI(idx, "rate", v))}</td>
-                    <td style={td}>{tInp(item.fineGold, v => upI(idx, "fineGold", v), false, true)}</td>
-                    <td style={{ border: "none", textAlign: "center", padding: "0 2px" }}>
-                      <button type="button" onClick={() => setIssue(p => p.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a", padding: 2 }}><Trash2 size={13} /></button>
+              {/* Main Table */}
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.5 }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...th, width: 28 }}>S.No</th>
+                    <th style={{ ...th, width: 66 }}>Amount</th>
+                    <th style={{ ...th, textAlign: "left" }}>Item Name</th>
+                    <th style={{ ...th, width: 32 }}>Pcs</th>
+                    <th style={{ ...th, width: 74 }}>Gross<br />Weight</th>
+                    <th style={{ ...th, width: 62 }}>AD<br />Weight</th>
+                    <th style={{ ...th, width: 64 }}>Less<br />Weight</th>
+                    <th style={{ ...th, width: 90, textAlign: "left" }}>Description</th>
+                    <th style={{ ...th, width: 74 }}>Net<br />Weight</th>
+                    <th style={{ ...th, width: 56 }}>Tunch<br />%</th>
+                    <th style={{ ...th, width: 52 }}>Rate</th>
+                    <th style={{ ...th, width: 74 }}>Fine<br />Gold</th>
+                    <th style={{ width: 24, border: "none", background: "#fff" }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* ISSUE label row */}
+                  <tr>
+                    <td style={td}></td><td style={td}></td>
+                    <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>ISSUE</span></td>
+                    <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
+                    <td style={{ border: "none", textAlign: "center" }}>
+                      <button type="button" onClick={() => setIssue(p => [...p, makeItem("ISSUE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#4caf7d" }}><PlusCircle size={15} /></button>
                     </td>
                   </tr>
-                ))}
-                {/* Issue Total */}
-                <tr>
-                  <td style={totalTd}></td><td style={totalTd}></td>
-                  <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Issue - Total :</td>
-                  <td style={td}><input type="text" value={iG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={iA} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={iL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={totalTd}></td>
-                  <td style={td}><input type="text" value={iN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={totalTd}></td><td style={totalTd}></td>
-                  <td style={td}><input type="text" value={iF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={{ border: "none" }}></td>
-                </tr>
+                  {issue.map((item, idx) => (
+                    <tr key={item.id}>
+                      <td style={{ ...td, textAlign: "center", fontSize: 11, padding: "2px 2px" }}>{idx + 1}</td>
+                      <td style={td}>{tInp(item.amount, v => upI(idx, "amount", v))}</td>
+                      <td style={td}>{tInp(item.itemName, v => upI(idx, "itemName", v), true)}</td>
+                      <td style={td}>{tInp(item.pcs, v => upI(idx, "pcs", v))}</td>
+                      <td style={td}>{tInp(item.grossWeight, v => upI(idx, "grossWeight", v))}</td>
+                      <td style={td}>{tInp(item.adWeight, v => upI(idx, "adWeight", v))}</td>
+                      <td style={td}>{tInp(item.lessWeight, v => upI(idx, "lessWeight", v))}</td>
+                      <td style={{ ...td, width: 90, maxWidth: 90, textAlign: "left" }}>{tInp(item.description, v => upI(idx, "description", v))}</td>
+                      <td style={td}>{tInp(item.netWeight, v => upI(idx, "netWeight", v), false, true)}</td>
+                      <td style={td}>{tInp(item.tunch, v => upI(idx, "tunch", v))}</td>
+                      <td style={td}>{tInp(item.rate, v => upI(idx, "rate", v))}</td>
+                      <td style={td}>{tInp(item.fineGold, v => upI(idx, "fineGold", v), false, true)}</td>
+                      <td style={{ border: "none", textAlign: "center", padding: "0 2px" }}>
+                        <button type="button" onClick={() => setIssue(p => p.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a", padding: 2 }}><Trash2 size={13} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Issue Total */}
+                  <tr>
+                    <td style={totalTd}></td><td style={totalTd}></td>
+                    <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Issue - Total :</td>
+                    <td style={td}><input type="text" value={iG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={iA} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={iL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={totalTd}></td>
+                    <td style={td}><input type="text" value={iN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={totalTd}></td><td style={totalTd}></td>
+                    <td style={td}><input type="text" value={iF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
 
-                {/* RECEIVE label row */}
-                <tr>
-                  <td style={td}></td><td style={td}></td>
-                  <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>RECEIVE</span></td>
-                  <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
-                  <td style={{ border: "none", textAlign: "center" }}>
-                    <button type="button" onClick={() => setRecv(p => [...p, makeItem("RECEIVE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a" }}><PlusCircle size={15} /></button>
-                  </td>
-                </tr>
-                {recv.map((item, idx) => (
-                  <tr key={item.id}>
-                    <td style={{ ...td, textAlign: "center", fontSize: 11, padding: "2px 2px" }}>{idx + 1}</td>
-                    <td style={td}>{tInp(item.amount, v => upR(idx, "amount", v))}</td>
-                    <td style={td}>{tInp(item.itemName, v => upR(idx, "itemName", v), true)}</td>
-                    <td style={td}>{tInp(item.pcs, v => upR(idx, "pcs", v))}</td>
-                    <td style={td}>{tInp(item.grossWeight, v => upR(idx, "grossWeight", v))}</td>
-                    <td style={td}>{tInp(item.adWeight, v => upR(idx, "adWeight", v))}</td>
-                    <td style={td}>{tInp(item.lessWeight, v => upR(idx, "lessWeight", v))}</td>
-                    <td style={{ ...td, textAlign: "left" }}>{tInp(item.description, v => upR(idx, "description", v))}</td>
-                    <td style={td}>{tInp(item.netWeight, v => upR(idx, "netWeight", v), false, true)}</td>
-                    <td style={td}>{tInp(item.tunch, v => upR(idx, "tunch", v))}</td>
-                    <td style={td}>{tInp(item.rate, v => upR(idx, "rate", v))}</td>
-                    <td style={td}>{tInp(item.fineGold, v => upR(idx, "fineGold", v), false, true)}</td>
-                    <td style={{ border: "none", textAlign: "center", padding: "0 2px" }}>
-                      <button type="button" onClick={() => setRecv(p => p.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a", padding: 2 }}><Trash2 size={13} /></button>
+                  {/* RECEIVE label row */}
+                  <tr>
+                    <td style={td}></td><td style={td}></td>
+                    <td style={{ ...td, padding: "2px 6px" }}><span style={{ fontWeight: "bold", textDecoration: "underline" }}>RECEIVE</span></td>
+                    <td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td><td style={td}></td>
+                    <td style={{ border: "none", textAlign: "center" }}>
+                      <button type="button" onClick={() => setRecv(p => [...p, makeItem("RECEIVE")])} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a" }}><PlusCircle size={15} /></button>
                     </td>
                   </tr>
-                ))}
-                {/* Receive Total */}
-                <tr>
-                  <td style={totalTd}></td><td style={totalTd}></td>
-                  <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Receive - Total :</td>
-                  <td style={td}><input type="text" value={rG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={rA} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={rL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={totalTd}></td>
-                  <td style={td}><input type="text" value={rN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={totalTd}></td><td style={totalTd}></td>
-                  <td style={td}><input type="text" value={rF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
-                  <td style={{ border: "none" }}></td>
-                </tr>
-                {/* Bill Total */}
-                <tr>
-                  <td style={grandTd}></td><td style={grandTd}></td>
-                  <td colSpan={2} style={{ ...grandTd, textAlign: "right", padding: "5px 8px" }}>Bill Total :</td>
-                  <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={tA} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
-                  <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
-                  <td style={grandTd}></td>
-                  <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
-                  <td style={grandTd}></td><td style={grandTd}></td>
-                  <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
-                  <td style={{ border: "none" }}></td>
-                </tr>
-              </tbody>
-            </table>
+                  {recv.map((item, idx) => (
+                    <tr key={item.id}>
+                      <td style={{ ...td, textAlign: "center", fontSize: 11, padding: "2px 2px" }}>{idx + 1}</td>
+                      <td style={td}>{tInp(item.amount, v => upR(idx, "amount", v))}</td>
+                      <td style={td}>{tInp(item.itemName, v => upR(idx, "itemName", v), true)}</td>
+                      <td style={td}>{tInp(item.pcs, v => upR(idx, "pcs", v))}</td>
+                      <td style={td}>{tInp(item.grossWeight, v => upR(idx, "grossWeight", v))}</td>
+                      <td style={td}>{tInp(item.adWeight, v => upR(idx, "adWeight", v))}</td>
+                      <td style={td}>{tInp(item.lessWeight, v => upR(idx, "lessWeight", v))}</td>
+                      <td style={{ ...td, textAlign: "left" }}>{tInp(item.description, v => upR(idx, "description", v))}</td>
+                      <td style={td}>{tInp(item.netWeight, v => upR(idx, "netWeight", v), false, true)}</td>
+                      <td style={td}>{tInp(item.tunch, v => upR(idx, "tunch", v))}</td>
+                      <td style={td}>{tInp(item.rate, v => upR(idx, "rate", v))}</td>
+                      <td style={td}>{tInp(item.fineGold, v => upR(idx, "fineGold", v), false, true)}</td>
+                      <td style={{ border: "none", textAlign: "center", padding: "0 2px" }}>
+                        <button type="button" onClick={() => setRecv(p => p.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#e05a5a", padding: 2 }}><Trash2 size={13} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Receive Total */}
+                  <tr>
+                    <td style={totalTd}></td><td style={totalTd}></td>
+                    <td colSpan={2} style={{ ...totalTd, textAlign: "right", padding: "4px 8px" }}>Receive - Total :</td>
+                    <td style={td}><input type="text" value={rG} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={rA} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={rL} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={totalTd}></td>
+                    <td style={td}><input type="text" value={rN} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={totalTd}></td><td style={totalTd}></td>
+                    <td style={td}><input type="text" value={rF} readOnly style={{ ...inp, background: "#e8f5e9", fontWeight: "bold", fontSize: 13, cursor: "default" }} /></td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                  {/* Bill Total */}
+                  <tr>
+                    <td style={grandTd}></td><td style={grandTd}></td>
+                    <td colSpan={2} style={{ ...grandTd, textAlign: "right", padding: "5px 8px" }}>Bill Total :</td>
+                    <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={tA} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={grandTd}></td>
+                    <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={grandTd}></td><td style={grandTd}></td>
+                    <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={{ border: "none" }}></td>
+                  </tr>
+                </tbody>
+              </table>
 
-            {/* Footer */}
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <tbody>
-                <tr>
-                  {/* Left payments */}
-                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "55%" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <tbody>
-                        {pays.map((p, i) => (
-                          <tr key={p.id}>
-                            <td style={{ borderRight: "1px solid #000", borderBottom: "1px solid #ddd", width: 72 }}>
-                              <input type="text" value={p.amount} onChange={e => upP(i, "amount", e.target.value)} style={{ ...inp, textAlign: "right" }} placeholder="" />
-                            </td>
-                            <td style={{ borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={p.label} onChange={e => upP(i, "label", e.target.value)} style={{ ...inp, textAlign: "left" }} placeholder="Name / description" />
-                            </td>
-                            <td style={{ borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", width: 78 }}>
-                              <input type="text" value={p.voucherNo || ""} onChange={e => upP(i, "voucherNo", e.target.value)} style={{ ...inp, textAlign: "left" }} placeholder="Ref no." />
+              {/* Footer */}
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                <tbody>
+                  <tr>
+                    {/* Left payments */}
+                    <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "55%" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <tbody>
+                          {pays.map((p, i) => (
+                            <tr key={p.id}>
+                              <td style={{ borderRight: "1px solid #000", borderBottom: "1px solid #ddd", width: 72 }}>
+                                <input type="text" value={p.amount} onChange={e => upP(i, "amount", e.target.value)} style={{ ...inp, textAlign: "right" }} placeholder="" />
+                              </td>
+                              <td style={{ borderBottom: "1px solid #ddd" }}>
+                                <input type="text" value={p.label} onChange={e => upP(i, "label", e.target.value)} style={{ ...inp, textAlign: "left" }} placeholder="Name / description" />
+                              </td>
+                              <td style={{ borderBottom: "1px solid #ddd", borderLeft: "1px solid #ddd", width: 78 }}>
+                                <input type="text" value={p.voucherNo || ""} onChange={e => upP(i, "voucherNo", e.target.value)} style={{ ...inp, textAlign: "left" }} placeholder="Ref no." />
+                              </td>
+                            </tr>
+                          ))}
+                          <tr><td colSpan={3} style={{ padding: "1px 6px" }}>
+                            <button type="button" onClick={() => setPays(p => [...p, makePayment()])} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: 10, fontFamily: "Courier New, monospace" }}>+ Add row</button>
+                          </td></tr>
+                        </tbody>
+                      </table>
+                    </td>
+                    {/* Right balance */}
+                    <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "45%" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                        <tbody>
+                          {[
+                            { label: "Paid Cash", val: paidCash, set: setPaidCash },
+                            { label: "Receipt Cash", val: rcptCash, set: setRcptCash },
+                            { label: "Previous Balance", val: prevBal, set: setPrevBal },
+                          ].map(({ label, val, set }) => (
+                            <tr key={label}>
+                              <td style={{ padding: "2px 8px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>{label}</td>
+                              <td style={{ padding: "1px 4px", borderBottom: "1px solid #ddd" }}>
+                                <input type="text" value={val} onChange={e => set(e.target.value)} style={{ ...inp, textAlign: "right" }} />
+                              </td>
+                            </tr>
+                          ))}
+                          <tr style={{ background: "#f5f5f5" }}>
+                            <td style={{ padding: "4px 8px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5 }}>Closing Balance</td>
+                            <td style={{ padding: "2px 4px" }}>
+                              <input type="text" value={closBal} onChange={e => setClosBal(e.target.value)} style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12 }} />
                             </td>
                           </tr>
-                        ))}
-                        <tr><td colSpan={3} style={{ padding: "1px 6px" }}>
-                          <button type="button" onClick={() => setPays(p => [...p, makePayment()])} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: 10, fontFamily: "Courier New, monospace" }}>+ Add row</button>
-                        </td></tr>
-                      </tbody>
-                    </table>
-                  </td>
-                  {/* Right balance */}
-                  <td style={{ border: "1px solid #000", verticalAlign: "top", padding: 0, width: "45%" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                      <tbody>
-                        {[
-                          { label: "Paid Cash", val: paidCash, set: setPaidCash },
-                          { label: "Receipt Cash", val: rcptCash, set: setRcptCash },
-                          { label: "Previous Balance", val: prevBal, set: setPrevBal },
-                        ].map(({ label, val, set }) => (
-                          <tr key={label}>
-                            <td style={{ padding: "2px 8px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>{label}</td>
-                            <td style={{ padding: "1px 4px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={val} onChange={e => set(e.target.value)} style={{ ...inp, textAlign: "right" }} />
-                            </td>
-                          </tr>
-                        ))}
-                        <tr style={{ background: "#f5f5f5" }}>
-                          <td style={{ padding: "4px 8px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5 }}>Closing Balance</td>
-                          <td style={{ padding: "2px 4px" }}>
-                            <input type="text" value={closBal} onChange={e => setClosBal(e.target.value)} style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12 }} />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-            {/* Dr/Naam */}
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-              <tbody>
-                <tr>
-                  <td style={{ border: "1px solid #000", padding: "3px 8px", width: "20%", fontWeight: "bold", fontFamily: "Courier New, monospace" }}>Dr/Naam</td>
-                  <td style={{ border: "1px solid #000", padding: 0 }}>
-                    <input type="text" value={drNaam} onChange={e => setDrNaam(e.target.value)} style={{ ...inp, textAlign: "left" }} />
-                  </td>
-                  <td style={{ border: "1px solid #000", padding: "3px 8px", width: "20%", fontWeight: "bold", fontFamily: "Courier New, monospace", textAlign: "right" }}>Dr/Naam</td>
-                </tr>
-              </tbody>
-            </table>
+              {/* Dr/Naam */}
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                <tbody>
+                  <tr>
+                    <td style={{ border: "1px solid #000", padding: "3px 8px", width: "20%", fontWeight: "bold", fontFamily: "Courier New, monospace" }}>Dr/Naam</td>
+                    <td style={{ border: "1px solid #000", padding: 0 }}>
+                      <input type="text" value={drNaam} onChange={e => setDrNaam(e.target.value)} style={{ ...inp, textAlign: "left" }} />
+                    </td>
+                    <td style={{ border: "1px solid #000", padding: "3px 8px", width: "20%", fontWeight: "bold", fontFamily: "Courier New, monospace", textAlign: "right" }}>Dr/Naam</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 

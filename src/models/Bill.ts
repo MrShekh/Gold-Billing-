@@ -29,6 +29,7 @@ export interface IBill extends Document {
     customerName: string;
     voucherNo: string;
     date: string;
+    time?: string;
     items: mongoose.Types.DocumentArray<mongoose.Document>;
     payments: mongoose.Types.DocumentArray<mongoose.Document>;
     paidCash?: string;
@@ -59,6 +60,7 @@ const BillSchema = new Schema<IBill>(
         customerName: { type: String, required: true },
         voucherNo: { type: String, required: true },
         date: { type: String, required: true },
+        time: { type: String },
         items: [BillItemSchema],
         payments: [PaymentEntrySchema],
         paidCash: String,

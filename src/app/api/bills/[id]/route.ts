@@ -7,7 +7,7 @@ function mapBill(b: Record<string, unknown>) {
     return {
         id: (b._id as { toString(): string }).toString(),
         customerId: b.customerId, customerName: b.customerName,
-        voucherNo: b.voucherNo, date: b.date, createdAt: b.createdAt,
+        voucherNo: b.voucherNo, date: b.date, time: b.time, createdAt: b.createdAt,
         paidCash: b.paidCash, receiptCash: b.receiptCash,
         previousBalance: b.previousBalance, closingBalance: b.closingBalance,
         drNaam: b.drNaam,

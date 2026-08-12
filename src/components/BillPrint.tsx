@@ -113,7 +113,7 @@ export default function BillPrint({ bill, companyName = "BHATIJA" }: Props) {
               <td style={{ textAlign: "right", border: "none", fontSize: 11, lineHeight: 1.7 }}>
                 <span>V.No.&nbsp;&nbsp;:&nbsp;&nbsp;{bill.voucherNo}</span>
                 <br />
-                <span>Date&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;{fmtDate(bill.date)}</span>
+                <span>Date&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;{fmtDate(bill.date)}{bill.time ? ` ${bill.time}` : ""}</span>
               </td>
             </tr>
           </tbody>

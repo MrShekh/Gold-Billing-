@@ -68,6 +68,7 @@ export interface Bill {
   customerName: string;
   voucherNo: string;
   date: string;
+  time?: string;
   items: BillItem[];
   payments: PaymentEntry[];
   paidCash?: string;

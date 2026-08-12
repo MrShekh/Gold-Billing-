@@ -10,6 +10,7 @@ function mapBill(b: Record<string, unknown>) {
         customerName: b.customerName,
         voucherNo: b.voucherNo,
         date: b.date,
+        time: b.time,
         createdAt: b.createdAt,
         paidCash: b.paidCash,
         receiptCash: b.receiptCash,
