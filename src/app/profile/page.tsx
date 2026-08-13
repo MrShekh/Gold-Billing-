@@ -16,6 +16,19 @@ export default function ProfilePage() {
     business_name: "", owner_name: "", phone: "", email: "", address: "", city: "", gst_no: ""
   });
 
+  const [theme, setTheme] = useState("dark");
+
+  useEffect(() => {
+    const t = localStorage.getItem("theme") || "dark";
+    setTheme(t);
+  }, []);
+
+  const toggleTheme = (newTheme: "light" | "dark") => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+  };
+
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -130,6 +143,30 @@ export default function ProfilePage() {
                 {profileMsg && <span style={{ color: "var(--success)", fontSize: 13 }}>{profileMsg}</span>}
               </div>
             </form>
+          </div>
+
+          {/* Theme Settings */}
+          <div className="form-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid var(--border)" }}>
+            <h3 style={{ marginBottom: 16, borderBottom: "1px solid var(--border)", paddingBottom: 8 }}>Theme Settings</h3>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>Choose your preferred interface theme.</p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                type="button"
+                className={`btn ${theme === "light" ? "btn-primary" : "btn-secondary"}`}
+                onClick={() => toggleTheme("light")}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              >
+                ☀️ Light Mode
+              </button>
+              <button
+                type="button"
+                className={`btn ${theme === "dark" ? "btn-primary" : "btn-secondary"}`}
+                onClick={() => toggleTheme("dark")}
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              >
+                🌙 Dark Mode
+              </button>
+            </div>
           </div>
 
           {/* Local Backup */}
