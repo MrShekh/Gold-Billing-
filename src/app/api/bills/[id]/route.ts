@@ -32,26 +32,35 @@ function mapBill(b: Record<string, unknown>) {
     };
 }
 
+function billNetTotals(items: any[]) {
+    let fineGold = 0;
+    let cash = 0;
+    for (const item of items ?? []) {
+        const itemFine = parseFloat(item.fineGold ?? "0") || 0;
+        const itemAmount = parseFloat(item.amount ?? "0") || 0;
+        if (item.type === "ISSUE") {
+            fineGold += itemFine;
+            cash += itemAmount;
+        } else {
+            fineGold -= itemFine;
+            cash -= itemAmount;
+        }
+    }
+    return { fineGold, cash };
+}
+
 // ── Helper: recalculate customer balance from all their remaining bills ────────
+// Returns the recomputed totals so callers (e.g. PUT) can also refresh the
+// per-bill prevFineGold/closingFineGold snapshot fields.
 async function recalcCustomerBalance(customerId: string) {
     const remainingBills = await BillModel.find({ customerId }).lean() as any[];
 
     let totalFineGold = 0;
     let totalCash = 0;
-
     for (const bill of remainingBills) {
-        const items = (bill.items ?? []) as any[];
-        for (const item of items) {
-            const fineGold = parseFloat(item.fineGold ?? "0") || 0;
-            const amount = parseFloat(item.amount ?? "0") || 0;
-            if (item.type === "ISSUE") {
-                totalFineGold += fineGold;
-                totalCash += amount;
-            } else {
-                totalFineGold -= fineGold;
-                totalCash -= amount;
-            }
-        }
+        const { fineGold, cash } = billNetTotals(bill.items ?? []);
+        totalFineGold += fineGold;
+        totalCash += cash;
     }
 
     if (remainingBills.length === 0) {
@@ -64,6 +73,8 @@ async function recalcCustomerBalance(customerId: string) {
             { upsert: true, new: true }
         );
     }
+
+    return { totalFineGold, totalCash };
 }
 
 export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -89,16 +100,28 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
         const oldCustomerId = existing.customerId as string;
 
-        const bill = await BillModel.findByIdAndUpdate(id, data, { new: true }).lean() as any;
+        let bill = await BillModel.findByIdAndUpdate(id, data, { new: true }).lean() as any;
         if (!bill) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
         // Jama balance is derived from item totals, so any edit (e.g. adding/changing
         // ISSUE or RECEIVE rows) must recompute it — otherwise it keeps the stale
         // pre-edit value.
-        await recalcCustomerBalance(bill.customerId as string);
+        const { totalFineGold } = await recalcCustomerBalance(bill.customerId as string);
         if (oldCustomerId && oldCustomerId !== bill.customerId) {
             await recalcCustomerBalance(oldCustomerId);
         }
+
+        // The printed bill reads its own frozen prevFineGold/closingFineGold snapshot
+        // rather than the live customer balance, so it must be refreshed too —
+        // otherwise the preview keeps showing the pre-edit closing amount.
+        // (previousBalance/closingBalance are left alone: on the edit page those are
+        // separate, manually-typed ledger fields, not derived Cash Jama totals.)
+        const { fineGold: thisBillFine } = billNetTotals(bill.items ?? []);
+        const prevFineGoldNum = totalFineGold - thisBillFine;
+        bill = await BillModel.findByIdAndUpdate(id, {
+            prevFineGold: prevFineGoldNum.toFixed(3),
+            closingFineGold: totalFineGold.toFixed(3),
+        }, { new: true }).lean() as any;
 
         return NextResponse.json(mapBill(bill as unknown as Record<string, unknown>));
     } catch (err) {
