@@ -93,13 +93,14 @@ function EditBillContent() {
     const less = parseFloat(item.lessWeight ?? "") || 0;
     const tunch = parseFloat(item.tunch ?? "") || 0;
     const rate = parseFloat(item.rate ?? "") || 0;
+    const hasWeight = !!(item.grossWeight || item.adWeight || item.lessWeight);
     const net = gross - ad - less;
     const totalPercentage = tunch + rate;
     const fine = net > 0 && totalPercentage > 0 ? (net * totalPercentage) / 100 : 0;
     return {
       ...item,
-      netWeight: net > 0 ? net.toFixed(3) : item.netWeight,
-      fineGold: fine > 0 ? fine.toFixed(3) : item.fineGold,
+      netWeight: hasWeight ? net.toFixed(3) : "",
+      fineGold: hasWeight && fine > 0 ? fine.toFixed(3) : "",
     };
   }
 
