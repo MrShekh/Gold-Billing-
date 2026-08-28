@@ -84,8 +84,22 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
         await connectDB();
         const { id } = await context.params;
         const data = await req.json();
-        const bill = await BillModel.findByIdAndUpdate(id, data, { new: true }).lean();
+
+        const existing = await BillModel.findById(id).lean() as any;
+        if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+        const oldCustomerId = existing.customerId as string;
+
+        const bill = await BillModel.findByIdAndUpdate(id, data, { new: true }).lean() as any;
         if (!bill) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+        // Jama balance is derived from item totals, so any edit (e.g. adding/changing
+        // ISSUE or RECEIVE rows) must recompute it — otherwise it keeps the stale
+        // pre-edit value.
+        await recalcCustomerBalance(bill.customerId as string);
+        if (oldCustomerId && oldCustomerId !== bill.customerId) {
+            await recalcCustomerBalance(oldCustomerId);
+        }
+
         return NextResponse.json(mapBill(bill as unknown as Record<string, unknown>));
     } catch (err) {
         console.error(err);
