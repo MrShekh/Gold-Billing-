@@ -2,7 +2,6 @@
 import React, { forwardRef, useRef, useImperativeHandle } from "react";
 import { useReactToPrint } from "react-to-print";
 import type { Bill } from "@/lib/db";
-import { Printer } from "lucide-react";
 
 interface Props {
   bill: Bill;
@@ -25,34 +24,30 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
   const internalRef = useRef<HTMLDivElement>(null);
   useImperativeHandle(outerRef, () => internalRef.current as HTMLDivElement);
 
-  const handlePrint = useReactToPrint({
-    contentRef: internalRef,
-    documentTitle: `Bill-${bill.voucherNo}`,
-  });
-
   const issueItems = bill.items.filter((i) => i.type === "ISSUE");
   const receiveItems = bill.items.filter((i) => i.type === "RECEIVE");
 
-  // Phone size styles vs Desktop size styles
+  // Generous vertical padding & line-height so values NEVER touch the bottom line
   const thStyle: React.CSSProperties = {
     border: "1.5px solid #000000",
-    padding: isPhoneSize ? "4px 2px" : "6px 4px",
+    padding: isPhoneSize ? "6px 2px 7px 2px" : "7px 4px 8px 4px",
     textAlign: "center",
     fontWeight: 900,
     background: "#e5e5e5",
     fontSize: isPhoneSize ? 10.5 : 11,
     color: "#000000",
     verticalAlign: "middle",
-    lineHeight: 1.15,
+    lineHeight: 1.25,
   };
 
   const tdStyle: React.CSSProperties = {
     border: "1px solid #000000",
-    padding: isPhoneSize ? "4px 2px" : "6px 4px",
+    padding: isPhoneSize ? "6px 2px 7px 2px" : "7px 4px 8px 4px",
     textAlign: "center",
     verticalAlign: "middle",
     fontSize: isPhoneSize ? 11.5 : 12,
     fontWeight: 800,
+    lineHeight: 1.35,
     color: "#000000",
   };
 
@@ -78,6 +73,16 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
     color: "#000000",
   };
 
+  const footerCellPadding = isPhoneSize
+    ? "5px 8px 6px 8px"
+    : "6px 10px 7px 10px";
+  const footerHeaderPadding = isPhoneSize
+    ? "4px 8px 5px 8px"
+    : "5px 10px 6px 10px";
+  const footerClosingPadding = isPhoneSize
+    ? "6px 8px 7px 8px"
+    : "7px 10px 8px 10px";
+
   return (
     <div>
       {/* ===== PRINTABLE BILL (EXACT SARAFA FORMAT) ===== */}
@@ -89,7 +94,7 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
           fontSize: isPhoneSize ? 11 : 11.5,
           color: "#000000",
           background: "#ffffff",
-          padding: isPhoneSize ? "12px 14px" : "16px 20px",
+          padding: isPhoneSize ? "14px 16px" : "18px 22px",
           maxWidth: isPhoneSize ? 640 : 1000,
           width: "100%",
           margin: "0 auto",
@@ -101,7 +106,7 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            marginBottom: 6,
+            marginBottom: 8,
           }}
         >
           <tbody>
@@ -250,7 +255,9 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                 style={{
                   ...totalRowStyle,
                   textAlign: "right",
-                  padding: isPhoneSize ? "4px 6px 4px 2px" : "6px 6px 6px 4px",
+                  padding: isPhoneSize
+                    ? "6px 6px 7px 2px"
+                    : "7px 6px 8px 4px",
                 }}
               >
                 Issue - Total :
@@ -335,7 +342,9 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                 style={{
                   ...totalRowStyle,
                   textAlign: "right",
-                  padding: isPhoneSize ? "4px 6px 4px 2px" : "6px 6px 6px 4px",
+                  padding: isPhoneSize
+                    ? "6px 6px 7px 2px"
+                    : "7px 6px 8px 4px",
                 }}
               >
                 Receive - Total :
@@ -373,7 +382,9 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                 style={{
                   ...grandTotalStyle,
                   textAlign: "right",
-                  padding: isPhoneSize ? "4px 6px 4px 2px" : "6px 6px 6px 4px",
+                  padding: isPhoneSize
+                    ? "6px 6px 7px 2px"
+                    : "7px 6px 8px 4px",
                 }}
               >
                 Bill Total :
@@ -511,13 +522,14 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                           <td
                             colSpan={2}
                             style={{
-                              padding: "3px 8px",
+                              padding: footerHeaderPadding,
                               background: "#f0fdf4",
                               borderBottom: "1px solid #ddd",
                               fontSize: isPhoneSize ? 9.5 : 10,
                               fontWeight: 900,
                               color: "#166534",
                               letterSpacing: 0.4,
+                              lineHeight: 1.3,
                             }}
                           >
                             CASH JAMA (₹)
@@ -526,24 +538,26 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 700,
                               width: "55%",
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             Previous Jama
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             {prevCash > 0 ? prevCash.toFixed(2) : "0.00"}
@@ -552,23 +566,25 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 700,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             This Bill Issue Cash (+)
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
                               color: "#166534",
+                              lineHeight: 1.35,
                             }}
                           >
                             {issueCash > 0 ? `+${issueCash.toFixed(2)}` : "0.00"}
@@ -577,23 +593,25 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 900,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             Total Cash Due
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 900,
                               color: "#166534",
+                              lineHeight: 1.35,
                             }}
                           >
                             {totalCashDue.toFixed(2)}
@@ -602,23 +620,25 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 700,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             Received Cash (−)
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
                               color: "#166534",
+                              lineHeight: 1.35,
                             }}
                           >
                             {recvCash > 0 ? `−${recvCash.toFixed(2)}` : "0.00"}
@@ -627,21 +647,23 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr style={{ background: "#dcfce7" }}>
                           <td
                             style={{
-                              padding: "3px 8px",
+                              padding: footerClosingPadding,
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 11 : 11.5,
                               color: "#166534",
+                              lineHeight: 1.35,
                             }}
                           >
                             Closing Jama Cash
                           </td>
                           <td
                             style={{
-                              padding: "3px 8px",
+                              padding: footerClosingPadding,
                               textAlign: "right",
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 11 : 11.5,
                               color: "#166534",
+                              lineHeight: 1.35,
                             }}
                           >
                             {closingCash.toFixed(2)}
@@ -672,13 +694,14 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                           <td
                             colSpan={2}
                             style={{
-                              padding: "3px 8px",
+                              padding: footerHeaderPadding,
                               background: "#fef9e7",
                               borderBottom: "1px solid #ddd",
                               fontSize: isPhoneSize ? 9.5 : 10,
                               fontWeight: 900,
                               color: "#92400e",
                               letterSpacing: 0.4,
+                              lineHeight: 1.3,
                             }}
                           >
                             FINE GOLD JAMA (grams)
@@ -687,24 +710,26 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 700,
                               width: "55%",
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             Previous Jama
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             {prevFine > 0 ? prevFine.toFixed(3) : "0.000"} g
@@ -713,23 +738,25 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 700,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             This Bill Issue (+)
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
                               color: "#b45309",
+                              lineHeight: 1.35,
                             }}
                           >
                             {issueFine > 0 ? `+${issueFine.toFixed(3)}` : "0.000"} g
@@ -738,23 +765,25 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 900,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             Total Fine Due
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 900,
                               color: "#92400e",
+                              lineHeight: 1.35,
                             }}
                           >
                             {totalFineDue.toFixed(3)} g
@@ -763,23 +792,25 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 700,
                               color: "#000000",
+                              lineHeight: 1.35,
                             }}
                           >
                             Received Fine (−)
                           </td>
                           <td
                             style={{
-                              padding: "2px 8px",
+                              padding: footerCellPadding,
                               borderBottom: "1px solid #ccc",
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
                               color: "#166534",
+                              lineHeight: 1.35,
                             }}
                           >
                             {recvFine > 0 ? `−${recvFine.toFixed(3)}` : "0.000"} g
@@ -788,21 +819,23 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                         <tr style={{ background: "#fff3cd" }}>
                           <td
                             style={{
-                              padding: "4px 8px",
+                              padding: footerClosingPadding,
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 11.5 : 12,
                               color: "#856404",
+                              lineHeight: 1.35,
                             }}
                           >
                             Closing Jama Gold
                           </td>
                           <td
                             style={{
-                              padding: "4px 8px",
+                              padding: footerClosingPadding,
                               textAlign: "right",
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 12 : 13,
                               color: "#856404",
+                              lineHeight: 1.35,
                             }}
                           >
                             {closingFine.toFixed(3)} g
