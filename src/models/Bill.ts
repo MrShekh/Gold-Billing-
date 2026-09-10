@@ -25,6 +25,7 @@ const PaymentEntrySchema = new Schema({
 }, { _id: true });
 
 export interface IBill extends Document {
+    userId: string;
     customerId: string;
     customerName: string;
     voucherNo: string;
@@ -56,6 +57,7 @@ export interface IBill extends Document {
 
 const BillSchema = new Schema<IBill>(
     {
+        userId: { type: String, required: true, index: true },
         customerId: { type: String, required: true },
         customerName: { type: String, required: true },
         voucherNo: { type: String, required: true },

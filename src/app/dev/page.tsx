@@ -28,6 +28,12 @@ export default function DevAdminPage() {
     const [deleteEmail, setDeleteEmail] = useState("");
     const [deleting, setDeleting] = useState(false);
 
+    // Create user form
+    const [createEmail, setCreateEmail] = useState("");
+    const [createUsername, setCreateUsername] = useState("");
+    const [createPwd, setCreatePwd] = useState("");
+    const [creating, setCreating] = useState(false);
+
     async function fetchUsers(sec: string) {
         setLoading(true);
         setError("");
@@ -48,6 +54,35 @@ export default function DevAdminPage() {
             setError("Connection failed.");
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleCreateUser() {
+        if (!createEmail || !createUsername || !createPwd) return;
+        if (createPwd.length < 8) { setError("Password must be at least 8 characters"); return; }
+        setCreating(true);
+        setError("");
+        setSuccess("");
+        try {
+            const res = await fetch("/api/dev/users", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "x-dev-secret": secret },
+                body: JSON.stringify({ email: createEmail, username: createUsername, password: createPwd }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setSuccess(`User "${createUsername}" (${createEmail}) created successfully.`);
+                setCreateEmail("");
+                setCreateUsername("");
+                setCreatePwd("");
+                await fetchUsers(secret);
+            } else {
+                setError(data.error || "Create failed");
+            }
+        } catch {
+            setError("Create request failed.");
+        } finally {
+            setCreating(false);
         }
     }
 
@@ -226,8 +261,58 @@ export default function DevAdminPage() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Actions */}
+                                {/* Right Column: Actions */}
                             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+
+                                {/* Action 0: Create New User */}
+                                <div style={{ background: "#11111a", border: "1px solid rgba(74,207,125,0.25)", borderRadius: 16, padding: 28 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                                        <User size={20} style={{ color: "#4acf7d" }} />
+                                        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "#4acf7d" }}>Create New User Account</h3>
+                                    </div>
+                                    <p style={{ color: "#9ca3af", fontSize: 13, lineHeight: 1.5, margin: "0 0 20px" }}>
+                                        Directly register a new account. Use this to onboard a new client or sub-user.
+                                    </p>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                                        <div>
+                                            <label style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af", display: "block", marginBottom: 6 }}>EMAIL</label>
+                                            <input
+                                                type="email"
+                                                placeholder="newuser@example.com"
+                                                value={createEmail}
+                                                onChange={e => setCreateEmail(e.target.value)}
+                                                style={{ width: "100%", background: "#181824", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 14, outline: "none" }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af", display: "block", marginBottom: 6 }}>USERNAME</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. ramesh_jewellers"
+                                                value={createUsername}
+                                                onChange={e => setCreateUsername(e.target.value)}
+                                                style={{ width: "100%", background: "#181824", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 14, outline: "none" }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af", display: "block", marginBottom: 6 }}>PASSWORD (min 8 chars)</label>
+                                            <input
+                                                type="password"
+                                                placeholder="Minimum 8 characters"
+                                                value={createPwd}
+                                                onChange={e => setCreatePwd(e.target.value)}
+                                                style={{ width: "100%", background: "#181824", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "10px 14px", color: "#fff", fontSize: 14, outline: "none" }}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleCreateUser}
+                                            disabled={creating || !createEmail || !createUsername || !createPwd}
+                                            style={{ background: "rgba(74,207,125,0.12)", color: "#4acf7d", border: "1px solid #4acf7d", borderRadius: 8, padding: "12px 20px", fontWeight: 700, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background 0.2s", opacity: (creating || !createEmail || !createUsername || !createPwd) ? 0.5 : 1 }}
+                                        >
+                                            {creating ? "Creating…" : "✚ Create Account"}
+                                        </button>
+                                    </div>
+                                </div>
 
                                 {/* Action 1: Force Reset Password */}
                                 <div style={{ background: "#11111a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 28 }}>

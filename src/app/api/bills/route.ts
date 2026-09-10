@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import BillModel from "@/models/Bill";
 import CustomerBalanceModel from "@/models/CustomerBalance";
+import { getAuthUserId } from "@/lib/authHelper";
 
 function mapBill(b: Record<string, unknown>) {
     return {
@@ -51,10 +52,15 @@ function mapBill(b: Record<string, unknown>) {
     };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
-        const bills = await BillModel.find({}).sort({ createdAt: -1 }).lean();
+        const customerId = req.nextUrl.searchParams.get("customerId");
+        const query: Record<string, unknown> = { userId };
+        if (customerId) query.customerId = customerId;
+        const bills = await BillModel.find(query).sort({ createdAt: -1 }).lean();
         return NextResponse.json(bills.map(b => mapBill(b as unknown as Record<string, unknown>)));
     } catch (err) {
         console.error(err);
@@ -62,40 +68,22 @@ export async function GET() {
     }
 }
 
+import { recalculateCustomerLedger } from "@/lib/recalcLedger";
+
 export async function POST(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
         const data = await req.json();
 
-        // Calculate jama balance
-        const prev = await CustomerBalanceModel.findOne({ customerId: data.customerId });
-        const prevFineGoldNum = prev?.fineGoldBalance ?? 0;
-        const prevCashNum = prev?.cashBalance ?? 0;
-
-        const issueFineGold = (data.items ?? []).filter((i: { type: string }) => i.type === "ISSUE").reduce((s: number, i: { fineGold?: string }) => s + (parseFloat(i.fineGold ?? "0") || 0), 0);
-        const recvFineGold = (data.items ?? []).filter((i: { type: string }) => i.type === "RECEIVE").reduce((s: number, i: { fineGold?: string }) => s + (parseFloat(i.fineGold ?? "0") || 0), 0);
-        const billFineGold = issueFineGold - recvFineGold;
-
-        const issueCash = (data.items ?? []).filter((i: { type: string }) => i.type === "ISSUE").reduce((s: number, i: { amount?: string }) => s + (parseFloat(i.amount ?? "0") || 0), 0);
-        const recvCash = (data.items ?? []).filter((i: { type: string }) => i.type === "RECEIVE").reduce((s: number, i: { amount?: string }) => s + (parseFloat(i.amount ?? "0") || 0), 0);
-        const billCash = issueCash - recvCash;
-
-        const closingFineGoldNum = prevFineGoldNum + billFineGold;
-        const closingCashNum = prevCashNum + billCash;
-
         const bill = await BillModel.create({
             ...data,
-            previousBalance: prevCashNum.toFixed(2),
-            closingBalance: closingCashNum.toFixed(2),
-            prevFineGold: prevFineGoldNum.toFixed(3),
-            closingFineGold: closingFineGoldNum.toFixed(3),
+            userId,
         });
 
-        await CustomerBalanceModel.findOneAndUpdate(
-            { customerId: data.customerId },
-            { fineGoldBalance: closingFineGoldNum, cashBalance: closingCashNum },
-            { upsert: true, new: true }
-        );
+        // Recalculate full ledger chronologically
+        await recalculateCustomerLedger(userId, data.customerId);
 
         const fresh = await BillModel.findById(bill._id).lean();
         return NextResponse.json(mapBill(fresh as unknown as Record<string, unknown>), { status: 201 });

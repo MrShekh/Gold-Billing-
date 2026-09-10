@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IProfile extends Document {
+    userId: string;
     businessName: string;
     ownerName: string;
     phone: string;
@@ -12,6 +13,7 @@ export interface IProfile extends Document {
 
 const ProfileSchema = new Schema<IProfile>(
     {
+        userId: { type: String, required: true, unique: true },
         businessName: { type: String, default: "" },
         ownerName: { type: String, default: "" },
         phone: { type: String, default: "" },

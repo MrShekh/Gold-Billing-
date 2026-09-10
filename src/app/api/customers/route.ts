@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import CustomerModel from "@/models/Customer";
+import { getAuthUserId } from "@/lib/authHelper";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
-        const customers = await CustomerModel.find({}).sort({ createdAt: -1 }).lean();
+        const customers = await CustomerModel.find({ userId }).sort({ createdAt: -1 }).lean();
         return NextResponse.json(customers.map(c => ({
             id: c._id.toString(),
             name: c.name,
@@ -20,10 +23,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
         const { name, phone, address } = await req.json();
-        const customer = await CustomerModel.create({ name, phone, address });
+        const customer = await CustomerModel.create({ userId, name, phone, address });
         return NextResponse.json({
             id: customer._id.toString(),
             name: customer.name,

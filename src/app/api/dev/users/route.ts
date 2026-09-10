@@ -68,6 +68,46 @@ export async function POST(req: NextRequest) {
     }
 }
 
+// PUT — create a new user directly (dev onboarding)
+export async function PUT(req: NextRequest) {
+    if (!checkSecret(req)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    try {
+        await connectDB();
+        const { email, username, password } = await req.json();
+
+        if (!email || !username || !password) {
+            return NextResponse.json({ error: "email, username and password are required" }, { status: 400 });
+        }
+        if (password.length < 8) {
+            return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+        }
+
+        const existingEmail = await User.findOne({ email: email.toLowerCase().trim() });
+        if (existingEmail) {
+            return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+        }
+
+        const existingUsername = await User.findOne({ username: username.trim() });
+        if (existingUsername) {
+            return NextResponse.json({ error: "Username is already taken" }, { status: 409 });
+        }
+
+        const hashed = await bcrypt.hash(password, 12);
+        const user = await User.create({
+            email: email.toLowerCase().trim(),
+            username: username.trim(),
+            password: hashed,
+        });
+
+        return NextResponse.json({ success: true, message: `User ${user.email} created.` });
+    } catch (err) {
+        console.error(err);
+        return NextResponse.json({ error: "Failed" }, { status: 500 });
+    }
+}
+
 // DELETE — delete a user (use with caution)
 export async function DELETE(req: NextRequest) {
     if (!checkSecret(req)) {

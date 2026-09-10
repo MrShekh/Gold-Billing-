@@ -156,8 +156,12 @@ export async function getBillById(id: string): Promise<Bill | undefined> {
 }
 
 export async function getBillsByCustomer(customerId: string): Promise<Bill[]> {
-  const all = await getBills();
-  return all.filter(b => b.customerId === customerId);
+  try {
+    return await apiFetch(`/api/bills?customerId=${customerId}`);
+  } catch {
+    const all = await getBills();
+    return all.filter(b => b.customerId === customerId);
+  }
 }
 
 export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bill | null> {
@@ -176,6 +180,11 @@ export async function deleteBill(id: string): Promise<void> {
 }
 
 // ─── JAMA BALANCE ─────────────────────────────────────────────────────────────
+export async function getAllCustomerBalances(): Promise<CustomerBalance[]> {
+  try { return await apiFetch("/api/balance"); }
+  catch { return []; }
+}
+
 export async function getCustomerBalance(customerId: string): Promise<CustomerBalance | null> {
   try { return await apiFetch(`/api/balance?customerId=${customerId}`); }
   catch { return null; }

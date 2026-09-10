@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import CustomerBalanceModel from "@/models/CustomerBalance";
+import { getAuthUserId } from "@/lib/authHelper";
 
 export async function GET(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
         const { searchParams } = new URL(req.url);
         const customerId = searchParams.get("customerId");
 
         if (customerId) {
-            const bal = await CustomerBalanceModel.findOne({ customerId }).lean();
+            const bal = await CustomerBalanceModel.findOne({ userId, customerId }).lean();
             if (!bal) return NextResponse.json(null);
             return NextResponse.json({
                 id: (bal._id as { toString(): string }).toString(),
@@ -20,7 +23,7 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        const all = await CustomerBalanceModel.find({}).lean();
+        const all = await CustomerBalanceModel.find({ userId }).lean();
         return NextResponse.json(all.map(b => ({
             id: (b._id as { toString(): string }).toString(),
             customer_id: b.customerId,
@@ -35,16 +38,18 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
         const { customerId, paidFineGold, paidCash } = await req.json();
-        const prev = await CustomerBalanceModel.findOne({ customerId });
+        const prev = await CustomerBalanceModel.findOne({ userId, customerId });
         const newFineGold = Math.max(0, (prev?.fineGoldBalance ?? 0) - (paidFineGold || 0));
         const newCash = Math.max(0, (prev?.cashBalance ?? 0) - (paidCash || 0));
 
         await CustomerBalanceModel.findOneAndUpdate(
-            { customerId },
-            { fineGoldBalance: newFineGold, cashBalance: newCash },
+            { userId, customerId },
+            { userId, fineGoldBalance: newFineGold, cashBalance: newCash },
             { upsert: true, new: true }
         );
         return NextResponse.json({ success: true });

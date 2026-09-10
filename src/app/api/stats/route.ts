@@ -1,19 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import CustomerModel from "@/models/Customer";
 import BillModel from "@/models/Bill";
 import CustomerBalanceModel from "@/models/CustomerBalance";
+import { getAuthUserId } from "@/lib/authHelper";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
         const today = new Date().toISOString().slice(0, 10);
 
         const [totalCustomers, totalBills, todayBills, balances] = await Promise.all([
-            CustomerModel.countDocuments(),
-            BillModel.countDocuments(),
-            BillModel.countDocuments({ date: today }),
-            CustomerBalanceModel.find({}).lean(),
+            CustomerModel.countDocuments({ userId }),
+            BillModel.countDocuments({ userId }),
+            BillModel.countDocuments({ userId, date: today }),
+            CustomerBalanceModel.find({ userId }).lean(),
         ]);
 
         let totalJamaGold = 0;

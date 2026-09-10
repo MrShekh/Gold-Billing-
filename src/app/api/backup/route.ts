@@ -1,16 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import CustomerModel from "@/models/Customer";
 import BillModel from "@/models/Bill";
 import CustomerBalanceModel from "@/models/CustomerBalance";
+import { getAuthUserId } from "@/lib/authHelper";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+    const userId = getAuthUserId(req);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
         const [customers, bills, balances] = await Promise.all([
-            CustomerModel.find({}).lean(),
-            BillModel.find({}).lean(),
-            CustomerBalanceModel.find({}).lean(),
+            CustomerModel.find({ userId }).lean(),
+            BillModel.find({ userId }).lean(),
+            CustomerBalanceModel.find({ userId }).lean(),
         ]);
 
         const backup = {

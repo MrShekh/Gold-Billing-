@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
-import { getBills, deleteBill, type Bill } from "@/lib/db";
+import { getBills, deleteBill, getAllCustomerBalances, type Bill, type CustomerBalance } from "@/lib/db";
 import {
   PlusCircle,
   Search,
@@ -40,6 +40,7 @@ function fmtDate(d: string) {
 
 export default function BillsPage() {
   const [bills, setBills] = useState<Bill[]>([]);
+  const [customerBalances, setCustomerBalances] = useState<Record<string, CustomerBalance>>({});
   const [search, setSearch] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
@@ -58,11 +59,20 @@ export default function BillsPage() {
 
   async function load() {
     try {
-      const allData = await getBills();
+      const [allData, allBals] = await Promise.all([
+        getBills(),
+        getAllCustomerBalances(),
+      ]);
       const all = allData.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       setBills(all);
+
+      const balMap: Record<string, CustomerBalance> = {};
+      for (const b of allBals) {
+        balMap[b.customer_id] = b;
+      }
+      setCustomerBalances(balMap);
     } catch (e) {
       console.error(e);
     }
@@ -382,34 +392,82 @@ export default function BillsPage() {
                       <th>Voucher No</th>
                       <th>Customer</th>
                       <th>Date</th>
-                      <th>Items</th>
-                      <th>Closing Balance</th>
+                      <th>This Bill Net</th>
+                      <th>Balance After Bill</th>
+                      <th>Customer Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((b, i) => (
-                      <tr key={b.id}>
-                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
-                        <td>
-                          <span className="badge badge-gold">{b.voucherNo}</span>
-                        </td>
-                        <td style={{ fontWeight: 700 }}>{b.customerName}</td>
-                        <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                          {fmtDate(b.date)}
-                        </td>
-                        <td style={{ color: "var(--text-secondary)", fontSize: 13 }}>
-                          {getBillSummary(b)}
-                        </td>
-                        <td>
-                          {b.closingBalance !== undefined ? (
-                            <span style={{ fontWeight: 700, color: "var(--accent)" }}>
-                              {b.closingBalance}
-                            </span>
-                          ) : (
-                            <span style={{ color: "var(--text-muted)" }}>—</span>
-                          )}
-                        </td>
+                    {filtered.map((b, i) => {
+                      const netFine = parseFloat(b.billTotalFine || "0");
+                      const custBal = customerBalances[b.customerId];
+                      const currentDue = custBal ? custBal.fine_gold_balance : 0;
+
+                      return (
+                        <tr key={b.id}>
+                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
+                          <td>
+                            <span className="badge badge-gold">{b.voucherNo}</span>
+                          </td>
+                          <td style={{ fontWeight: 700 }}>
+                            <Link
+                              href={`/customers/${b.customerId}`}
+                              style={{ color: "var(--text-primary)", textDecoration: "none" }}
+                              className="customer-ledger-link"
+                              title="View Customer Ledger"
+                            >
+                              {b.customerName}
+                            </Link>
+                          </td>
+                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>
+                            {fmtDate(b.date)}
+                          </td>
+                          <td>
+                            <div>
+                              <span
+                                style={{
+                                  fontWeight: 700,
+                                  fontFamily: "monospace",
+                                  fontSize: 13.5,
+                                  color: netFine >= 0 ? "var(--accent)" : "var(--success)",
+                                }}
+                              >
+                                {netFine >= 0 ? `+${netFine.toFixed(3)}` : netFine.toFixed(3)} g
+                              </span>
+                              <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                                {getBillSummary(b)}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            {b.closingFineGold !== undefined && b.closingFineGold !== null ? (
+                              <span style={{ fontWeight: 600, color: "var(--text-primary)", fontFamily: "monospace", fontSize: 13.5 }}>
+                                {parseFloat(b.closingFineGold as string || "0").toFixed(3)} g
+                              </span>
+                            ) : (
+                              <span style={{ color: "var(--text-muted)" }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            {currentDue <= 0.0001 ? (
+                              <span
+                                className="badge badge-success"
+                                style={{ fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}
+                                title="Customer has zero pending balance today"
+                              >
+                                ✓ All Clear (0.000 g)
+                              </span>
+                            ) : (
+                              <span
+                                className="badge badge-gold"
+                                style={{ fontSize: 11, fontWeight: 700 }}
+                                title="Customer currently has an outstanding balance"
+                              >
+                                Owes {currentDue.toFixed(3)} g
+                              </span>
+                            )}
+                          </td>
                         <td>
                           <div className="flex gap-2">
                             <Link
@@ -436,8 +494,9 @@ export default function BillsPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
+                    );
+                  })}
+                </tbody>
                 </table>
               </div>
             )}

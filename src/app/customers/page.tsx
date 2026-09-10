@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import {
   getCustomers,
@@ -12,7 +13,7 @@ import {
   type Customer,
   type CustomerBalance,
 } from "@/lib/db";
-import { Search, UserPlus, Pencil, Trash2, Phone, MapPin, FileText, X, CreditCard, Scale } from "lucide-react";
+import { Search, UserPlus, Pencil, Trash2, Phone, MapPin, FileText, X, CreditCard, Scale, BookOpen } from "lucide-react";
 
 type Mode = "list" | "add" | "edit";
 
@@ -260,8 +261,14 @@ export default function CustomersPage() {
                         <tr>
                           <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
                           <td>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
-                              {c.name}
+                            <div style={{ fontWeight: 700, fontSize: 15 }}>
+                              <Link
+                                href={`/customers/${c.id}`}
+                                style={{ color: "var(--text-primary)", textDecoration: "none" }}
+                                className="customer-ledger-link"
+                              >
+                                {c.name}
+                              </Link>
                             </div>
                           </td>
                           <td>
@@ -301,6 +308,13 @@ export default function CustomersPage() {
                           </td>
                           <td>
                             <div className="flex gap-2">
+                              <Link
+                                href={`/customers/${c.id}`}
+                                className="btn btn-xs btn-secondary"
+                                title="View Ledger"
+                              >
+                                <BookOpen size={12} />
+                              </Link>
                               <button className="btn btn-xs btn-secondary" onClick={() => openEdit(c)}><Pencil size={12} /></button>
                               <button
                                 className="btn btn-xs"

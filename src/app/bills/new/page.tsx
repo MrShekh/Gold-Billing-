@@ -10,11 +10,13 @@ function makeItem(type: "ISSUE" | "RECEIVE"): BillItem {
   return { id: uid(), type, sno: 1, itemName: "", grossWeight: "", adWeight: "", lessWeight: "", description: "", netWeight: "", tunch: "", rate: "", fineGold: "", pcs: "", amount: "" };
 }
 
-const th: React.CSSProperties = { border: "1px solid #000", padding: "3px 4px", background: "#f0f0f0", fontFamily: "Courier New, monospace", fontSize: 10.5, fontWeight: "bold", textAlign: "center", lineHeight: 1.2, verticalAlign: "middle" };
+const MONO_FONT = "'Consolas', 'Courier New', monospace";
+
+const th: React.CSSProperties = { border: "1.5px solid #000", padding: "4px 4px", background: "#e8e8e8", fontFamily: MONO_FONT, fontSize: 11, fontWeight: 900, color: "#000", textAlign: "center", lineHeight: 1.2, verticalAlign: "middle" };
 const td: React.CSSProperties = { border: "1px solid #000", padding: 0, margin: 0, verticalAlign: "middle" };
-const inp: React.CSSProperties = { width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#000", padding: "3px 4px", textAlign: "center" };
-const totalTd: React.CSSProperties = { ...td, background: "#f7f7f7", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 13, textAlign: "center", padding: "4px 4px" };
-const grandTd: React.CSSProperties = { ...td, background: "#e8e8e8", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 14, textAlign: "center", padding: "5px 4px" };
+const inp: React.CSSProperties = { width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: MONO_FONT, fontSize: 12.5, fontWeight: 700, color: "#000", padding: "4px 4px", textAlign: "center" };
+const totalTd: React.CSSProperties = { ...td, background: "#f0f0f0", fontWeight: 900, fontFamily: MONO_FONT, fontSize: 13.5, color: "#000", textAlign: "center", padding: "5px 4px" };
+const grandTd: React.CSSProperties = { ...td, background: "#dedede", fontWeight: 900, fontFamily: MONO_FONT, fontSize: 14.5, color: "#000", textAlign: "center", padding: "6px 4px" };
 
 export default function NewBillPage() {
   const router = useRouter();
@@ -52,6 +54,15 @@ export default function NewBillPage() {
         setCustomers(custData);
         const vnoData = await generateVoucherNo();
         setVno(vnoData);
+
+        // Auto-select customer if customerId passed in URL
+        if (typeof window !== "undefined") {
+          const searchParams = new URLSearchParams(window.location.search);
+          const urlCid = searchParams.get("customerId");
+          if (urlCid && custData.some(c => c.id === urlCid)) {
+            onCustomerSelect(urlCid);
+          }
+        }
       } catch (e) {
         console.error(e);
       }
@@ -142,14 +153,18 @@ export default function NewBillPage() {
     setTF(fmt(diff(iF, rF)));
   }, [iG, iA, iL, iN, iF, rG, rA, rL, rN, rF]);
 
-  // Jama fine gold & cash = previous (from DB) + this bill's net amount
+  // Jama fine gold & cash = previous + this bill's net amount
   const prevJamaGold = jamaBalance?.fine_gold_balance ?? 0;
-  const currentBillGold = parseFloat(tF) || 0;
-  const closingJamaGold = prevJamaGold + currentBillGold;
+  const issueFineNum = parseFloat(iF) || 0;
+  const recvFineNum = parseFloat(rF) || 0;
+  const totalGoldDue = prevJamaGold + issueFineNum;
+  const closingJamaGold = Math.max(0, totalGoldDue - recvFineNum);
 
   const prevJamaCash = jamaBalance?.cash_balance ?? 0;
-  const currentBillCash = issue.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0) - recv.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
-  const closingJamaCash = prevJamaCash + currentBillCash;
+  const issueCashNum = issue.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
+  const recvCashNum = recv.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
+  const totalCashDue = prevJamaCash + issueCashNum;
+  const closingJamaCash = Math.max(0, totalCashDue - recvCashNum);
 
   const tInp = (val: string | undefined, onChange: (v: string) => void, bold?: boolean, readOnly?: boolean) => (
     <input
@@ -157,7 +172,13 @@ export default function NewBillPage() {
       value={val ?? ""}
       onChange={e => onChange(e.target.value)}
       readOnly={readOnly}
-      style={{ ...inp, fontWeight: bold ? "bold" : "normal", background: readOnly ? "#f0f7f0" : "transparent", cursor: readOnly ? "default" : "text" }}
+      style={{
+        ...inp,
+        fontWeight: bold ? 900 : 700,
+        color: "#000000",
+        background: readOnly ? "#eef7ee" : "transparent",
+        cursor: readOnly ? "default" : "text",
+      }}
     />
   );
 
@@ -360,13 +381,13 @@ export default function NewBillPage() {
                   <tr>
                     <td style={grandTd}></td><td style={grandTd}></td>
                     <td colSpan={2} style={{ ...grandTd, textAlign: "right", padding: "5px 8px" }}>Bill Total :</td>
-                    <td style={td}><input type="text" value={tG} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
-                    <td style={td}><input type="text" value={tA} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
-                    <td style={td}><input type="text" value={tL} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={parseFloat(tG) < 0 ? `${Math.abs(parseFloat(tG)).toFixed(3)} R` : (tG || "0.000")} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default", color: parseFloat(tG) < 0 ? "#15803d" : "#000" }} /></td>
+                    <td style={td}><input type="text" value={parseFloat(tA) < 0 ? `${Math.abs(parseFloat(tA)).toFixed(3)} R` : (tA || "0.000")} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default", color: parseFloat(tA) < 0 ? "#15803d" : "#000" }} /></td>
+                    <td style={td}><input type="text" value={parseFloat(tL) < 0 ? `${Math.abs(parseFloat(tL)).toFixed(3)} R` : (tL || "0.000")} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default", color: parseFloat(tL) < 0 ? "#15803d" : "#000" }} /></td>
                     <td style={grandTd}></td>
-                    <td style={td}><input type="text" value={tN} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={parseFloat(tN) < 0 ? `${Math.abs(parseFloat(tN)).toFixed(3)} R` : (tN || "0.000")} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default", color: parseFloat(tN) < 0 ? "#15803d" : "#000" }} /></td>
                     <td style={grandTd}></td><td style={grandTd}></td>
-                    <td style={td}><input type="text" value={tF} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default" }} /></td>
+                    <td style={td}><input type="text" value={parseFloat(tF) < 0 ? `${Math.abs(parseFloat(tF)).toFixed(3)} R` : (tF || "0.000")} readOnly style={{ ...inp, background: "#d4edda", fontWeight: "bold", fontSize: 14, cursor: "default", color: parseFloat(tF) < 0 ? "#15803d" : "#000" }} /></td>
                     <td style={{ border: "none" }}></td>
                   </tr>
                 </tbody>
@@ -389,9 +410,21 @@ export default function NewBillPage() {
                             </td>
                           </tr>
                           <tr>
-                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Net Cash</td>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Issue Cash (+)</td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={(currentBillCash >= 0 ? "+" : "") + currentBillCash.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", background: "#e8f5e9", cursor: "default", color: currentBillCash >= 0 ? "#166534" : "#b91c1c" }} />
+                              <input type="text" value={issueCashNum > 0 ? `+${issueCashNum.toFixed(2)}` : "0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, fontWeight: "bold" }}>Total Cash Due</td>
+                            <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                              <input type="text" value={totalCashDue.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", background: "#dcfce7", fontWeight: "bold", cursor: "default", color: "#166534" }} />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>Received Cash (−)</td>
+                            <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                              <input type="text" value={recvCashNum > 0 ? `−${recvCashNum.toFixed(2)}` : "0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
                             </td>
                           </tr>
                           <tr style={{ background: "#dcfce7" }}>
@@ -416,9 +449,21 @@ export default function NewBillPage() {
                             </td>
                           </tr>
                           <tr>
-                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Fine Gold</td>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Issue (+)</td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={tF || "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#e8f5e9", cursor: "default" }} />
+                              <input type="text" value={issueFineNum > 0 ? `+${issueFineNum.toFixed(3)}` : "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#fffdf0", cursor: "default", color: "#b45309" }} />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, fontWeight: "bold" }}>Total Fine Due</td>
+                            <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                              <input type="text" value={totalGoldDue.toFixed(3)} readOnly style={{ ...inp, textAlign: "right", background: "#fff8e1", fontWeight: "bold", cursor: "default", color: "#92400e" }} />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>Received Fine (−)</td>
+                            <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
+                              <input type="text" value={recvFineNum > 0 ? `−${recvFineNum.toFixed(3)}` : "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
                             </td>
                           </tr>
                           <tr style={{ background: "#fff3cd" }}>
