@@ -299,11 +299,14 @@ function EditBillContent() {
   }, [iG, iA, iL, iN, iF, rG, rA, rL, rN, rF]);
 
   // Jama fine gold & cash = previous + this bill's net amount
+  // Positive (+) = Due from customer, Negative (-) = Advance with customer
   const prevJamaGold = parseFloat(prevFineGoldVal) || 0;
   const issueFineNum = parseFloat(iF) || 0;
   const recvFineNum = parseFloat(rF) || 0;
-  const totalGoldDue = prevJamaGold + issueFineNum;
-  const closingJamaGold = Math.max(0, totalGoldDue - recvFineNum);
+  // If customer had advance (prevJamaGold < 0), it minuses from issueFineNum
+  const netGoldBeforeRecv = prevJamaGold + issueFineNum;
+  const totalGoldDue = Math.max(0, netGoldBeforeRecv);
+  const closingJamaGold = Number((netGoldBeforeRecv - recvFineNum).toFixed(3));
 
   const prevJamaCash = parseFloat(prevCashVal) || 0;
   const issueCashNum = issue.reduce(
@@ -314,8 +317,9 @@ function EditBillContent() {
     (sum, item) => sum + (parseFloat(item.amount ?? "0") || 0),
     0
   );
-  const totalCashDue = prevJamaCash + issueCashNum;
-  const closingJamaCash = Math.max(0, totalCashDue - recvCashNum);
+  const netCashBeforeRecv = prevJamaCash + issueCashNum;
+  const totalCashDue = Math.max(0, netCashBeforeRecv);
+  const closingJamaCash = Number((netCashBeforeRecv - recvCashNum).toFixed(2));
 
   const tInp = (
     val: string | undefined,
@@ -503,11 +507,15 @@ function EditBillContent() {
                         padding: "6px 10px",
                         borderRadius: 6,
                         background:
-                          prevJamaGold > 0 || prevJamaCash > 0
+                          prevJamaGold < -0.0001 || prevJamaCash < -0.01
+                            ? "#ecfdf5"
+                            : prevJamaGold > 0.0001 || prevJamaCash > 0.01
                             ? "#fff8e1"
                             : "#f0fff4",
                         border:
-                          prevJamaGold > 0 || prevJamaCash > 0
+                          prevJamaGold < -0.0001 || prevJamaCash < -0.01
+                            ? "1px solid #10b981"
+                            : prevJamaGold > 0.0001 || prevJamaCash > 0.01
                             ? "1px solid #f59e0b"
                             : "1px solid #6ee7b7",
                         display: "flex",
@@ -517,50 +525,66 @@ function EditBillContent() {
                     >
                       <Scale
                         size={14}
-                        style={{ color: "#b8860b", flexShrink: 0 }}
+                        style={{ color: prevJamaGold < -0.0001 ? "#059669" : "#b8860b", flexShrink: 0 }}
                       />
                       <div>
                         <div
                           style={{
                             fontSize: 9,
-                            color: "#92400e",
+                            color: prevJamaGold < -0.0001 ? "#065f46" : "#92400e",
                             fontWeight: "bold",
                             letterSpacing: 0.5,
                           }}
                         >
-                          PREVIOUS JAMA (BEFORE THIS BILL)
+                          {prevJamaGold < -0.0001
+                            ? "PREVIOUS ADVANCE IN STOCK (DEDUCTED FROM THIS BILL)"
+                            : "PREVIOUS JAMA (BEFORE THIS BILL)"}
                         </div>
                         <div style={{ display: "flex", gap: 16, marginTop: 2 }}>
                           <div>
-                            <span style={{ fontSize: 9, color: "#78350f" }}>
+                            <span style={{ fontSize: 9, color: prevJamaGold < -0.0001 ? "#065f46" : "#78350f" }}>
                               Fine Gold:{" "}
                             </span>
                             <strong
                               style={{
                                 fontSize: 13,
                                 color:
-                                  prevJamaGold > 0 ? "#b45309" : "#166534",
+                                  prevJamaGold < -0.0001
+                                    ? "#059669"
+                                    : prevJamaGold > 0.0001
+                                    ? "#b45309"
+                                    : "#166534",
                               }}
                             >
-                              {prevJamaGold.toFixed(3)} g
+                              {prevJamaGold < -0.0001
+                                ? `${Math.abs(prevJamaGold).toFixed(3)} g (ADVANCE)`
+                                : `${prevJamaGold.toFixed(3)} g`}
                             </strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: 9, color: "#78350f" }}>
+                            <span style={{ fontSize: 9, color: prevJamaCash < -0.01 ? "#065f46" : "#78350f" }}>
                               Cash:{" "}
                             </span>
                             <strong
                               style={{
                                 fontSize: 13,
                                 color:
-                                  prevJamaCash > 0 ? "#b45309" : "#166534",
+                                  prevJamaCash < -0.01
+                                    ? "#059669"
+                                    : prevJamaCash > 0.01
+                                    ? "#b45309"
+                                    : "#166534",
                               }}
                             >
-                              ₹
-                              {prevJamaCash.toLocaleString("en-IN", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
+                              {prevJamaCash < -0.01
+                                ? `₹${Math.abs(prevJamaCash).toLocaleString("en-IN", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })} (ADVANCE)`
+                                : `₹${prevJamaCash.toLocaleString("en-IN", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}`}
                             </strong>
                           </div>
                         </div>
@@ -1305,7 +1329,7 @@ function EditBillContent() {
                                 width: "60%",
                               }}
                             >
-                              Previous Jama
+                              {prevJamaCash < -0.01 ? "Previous Advance (−)" : prevJamaCash > 0.01 ? "Previous Due (+)" : "Previous Balance"}
                             </td>
                             <td
                               style={{
@@ -1316,18 +1340,20 @@ function EditBillContent() {
                               <input
                                 type="text"
                                 value={
-                                  prevJamaCash > 0
-                                    ? prevJamaCash.toFixed(2)
-                                    : "0.00"
+                                  prevJamaCash < -0.01
+                                    ? `−₹${Math.abs(prevJamaCash).toFixed(2)}`
+                                    : prevJamaCash > 0.01
+                                    ? `+₹${prevJamaCash.toFixed(2)}`
+                                    : "₹0.00"
                                 }
                                 readOnly
                                 style={{
                                   ...inp,
                                   textAlign: "right",
-                                  background: "#f0fdf4",
+                                  background: prevJamaCash < -0.01 ? "#ecfdf5" : "#f0fdf4",
                                   cursor: "default",
                                   fontWeight: 800,
-                                  color: prevJamaCash > 0 ? "#15803d" : "#000",
+                                  color: prevJamaCash < -0.01 ? "#059669" : prevJamaCash > 0 ? "#15803d" : "#000",
                                 }}
                               />
                             </td>
@@ -1354,8 +1380,8 @@ function EditBillContent() {
                                 type="text"
                                 value={
                                   issueCashNum > 0
-                                    ? `+${issueCashNum.toFixed(2)}`
-                                    : "0.00"
+                                    ? `+₹${issueCashNum.toFixed(2)}`
+                                    : "₹0.00"
                                 }
                                 readOnly
                                 style={{
@@ -1389,7 +1415,7 @@ function EditBillContent() {
                             >
                               <input
                                 type="text"
-                                value={totalCashDue.toFixed(2)}
+                                value={`₹${totalCashDue.toFixed(2)}`}
                                 readOnly
                                 style={{
                                   ...inp,
@@ -1424,8 +1450,8 @@ function EditBillContent() {
                                 type="text"
                                 value={
                                   recvCashNum > 0
-                                    ? `−${recvCashNum.toFixed(2)}`
-                                    : "0.00"
+                                    ? `−₹${recvCashNum.toFixed(2)}`
+                                    : "₹0.00"
                                 }
                                 readOnly
                                 style={{
@@ -1439,31 +1465,37 @@ function EditBillContent() {
                               />
                             </td>
                           </tr>
-                          <tr style={{ background: "#dcfce7" }}>
+                          <tr style={{ background: closingJamaCash < -0.01 ? "#ecfdf5" : "#dcfce7" }}>
                             <td
                               style={{
                                 padding: "4px 10px",
                                 fontWeight: 900,
                                 fontFamily: MONO_FONT,
                                 fontSize: 12,
-                                color: "#166534",
+                                color: closingJamaCash < -0.01 ? "#059669" : "#166534",
                               }}
                             >
-                              Closing Jama Cash
+                              {closingJamaCash < -0.01 ? "Closing Advance (Stock)" : closingJamaCash > 0.01 ? "Closing Due Cash" : "Closing Cash"}
                             </td>
                             <td style={{ padding: "2px 6px" }}>
                               <input
                                 type="text"
-                                value={closingJamaCash.toFixed(2)}
+                                value={
+                                  closingJamaCash < -0.01
+                                    ? `₹${Math.abs(closingJamaCash).toFixed(2)} Adv`
+                                    : closingJamaCash > 0.01
+                                    ? `₹${closingJamaCash.toFixed(2)} Due`
+                                    : "₹0.00 (Cleared)"
+                                }
                                 readOnly
                                 style={{
                                   ...inp,
                                   textAlign: "right",
                                   fontWeight: 900,
                                   fontSize: 13,
-                                  background: "#dcfce7",
+                                  background: closingJamaCash < -0.01 ? "#ecfdf5" : "#dcfce7",
                                   cursor: "default",
-                                  color: "#166534",
+                                  color: closingJamaCash < -0.01 ? "#059669" : "#166534",
                                 }}
                               />
                             </td>
@@ -1513,7 +1545,7 @@ function EditBillContent() {
                                 width: "60%",
                               }}
                             >
-                              Previous Jama
+                              {prevJamaGold < -0.0001 ? "Previous Advance (−)" : prevJamaGold > 0.0001 ? "Previous Due (+)" : "Previous Balance"}
                             </td>
                             <td
                               style={{
@@ -1524,18 +1556,20 @@ function EditBillContent() {
                               <input
                                 type="text"
                                 value={
-                                  prevJamaGold > 0
-                                    ? prevJamaGold.toFixed(3)
-                                    : "0.000"
+                                  prevJamaGold < -0.0001
+                                    ? `−${Math.abs(prevJamaGold).toFixed(3)} g`
+                                    : prevJamaGold > 0.0001
+                                    ? `+${prevJamaGold.toFixed(3)} g`
+                                    : "0.000 g"
                                 }
                                 readOnly
                                 style={{
                                   ...inp,
                                   textAlign: "right",
-                                  background: "#fef9e7",
+                                  background: prevJamaGold < -0.0001 ? "#ecfdf5" : "#fef9e7",
                                   cursor: "default",
                                   fontWeight: 800,
-                                  color: prevJamaGold > 0 ? "#b45309" : "#000",
+                                  color: prevJamaGold < -0.0001 ? "#059669" : prevJamaGold > 0 ? "#b45309" : "#000",
                                 }}
                               />
                             </td>
@@ -1597,7 +1631,7 @@ function EditBillContent() {
                             >
                               <input
                                 type="text"
-                                value={totalGoldDue.toFixed(3)}
+                                value={`${totalGoldDue.toFixed(3)} g`}
                                 readOnly
                                 style={{
                                   ...inp,
@@ -1647,31 +1681,37 @@ function EditBillContent() {
                               />
                             </td>
                           </tr>
-                          <tr style={{ background: "#fff3cd" }}>
+                          <tr style={{ background: closingJamaGold < -0.0001 ? "#ecfdf5" : "#fff3cd" }}>
                             <td
                               style={{
                                 padding: "4px 10px",
                                 fontWeight: 900,
                                 fontFamily: MONO_FONT,
                                 fontSize: 13,
-                                color: "#856404",
+                                color: closingJamaGold < -0.0001 ? "#059669" : "#856404",
                               }}
                             >
-                              Closing Jama Gold
+                              {closingJamaGold < -0.0001 ? "Closing Advance (Stock)" : closingJamaGold > 0.0001 ? "Closing Due Gold" : "Closing Fine Gold"}
                             </td>
                             <td style={{ padding: "2px 6px" }}>
                               <input
                                 type="text"
-                                value={closingJamaGold.toFixed(3)}
+                                value={
+                                  closingJamaGold < -0.0001
+                                    ? `${Math.abs(closingJamaGold).toFixed(3)} g Adv`
+                                    : closingJamaGold > 0.0001
+                                    ? `${closingJamaGold.toFixed(3)} g Due`
+                                    : "0.000 g (Cleared)"
+                                }
                                 readOnly
                                 style={{
                                   ...inp,
                                   textAlign: "right",
                                   fontWeight: 900,
                                   fontSize: 14,
-                                  background: "#fff3cd",
+                                  background: closingJamaGold < -0.0001 ? "#ecfdf5" : "#fff3cd",
                                   cursor: "default",
-                                  color: "#856404",
+                                  color: closingJamaGold < -0.0001 ? "#059669" : "#856404",
                                 }}
                               />
                             </td>

@@ -154,17 +154,21 @@ export default function NewBillPage() {
   }, [iG, iA, iL, iN, iF, rG, rA, rL, rN, rF]);
 
   // Jama fine gold & cash = previous + this bill's net amount
+  // Positive (+) = Due from customer, Negative (-) = Advance with customer
   const prevJamaGold = jamaBalance?.fine_gold_balance ?? 0;
   const issueFineNum = parseFloat(iF) || 0;
   const recvFineNum = parseFloat(rF) || 0;
-  const totalGoldDue = prevJamaGold + issueFineNum;
-  const closingJamaGold = Math.max(0, totalGoldDue - recvFineNum);
+  // If customer had advance (prevJamaGold < 0), it minuses from issueFineNum
+  const netGoldBeforeRecv = prevJamaGold + issueFineNum;
+  const totalGoldDue = Math.max(0, netGoldBeforeRecv);
+  const closingJamaGold = Number((netGoldBeforeRecv - recvFineNum).toFixed(3));
 
   const prevJamaCash = jamaBalance?.cash_balance ?? 0;
   const issueCashNum = issue.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
   const recvCashNum = recv.reduce((sum, item) => sum + (parseFloat(item.amount ?? "0") || 0), 0);
-  const totalCashDue = prevJamaCash + issueCashNum;
-  const closingJamaCash = Math.max(0, totalCashDue - recvCashNum);
+  const netCashBeforeRecv = prevJamaCash + issueCashNum;
+  const totalCashDue = Math.max(0, netCashBeforeRecv);
+  const closingJamaCash = Number((netCashBeforeRecv - recvCashNum).toFixed(2));
 
   const tInp = (val: string | undefined, onChange: (v: string) => void, bold?: boolean, readOnly?: boolean) => (
     <input
@@ -240,26 +244,58 @@ export default function NewBillPage() {
                   {!jamaLoading && cid && (
                     <div style={{
                       marginTop: 8, padding: "6px 10px", borderRadius: 6,
-                      background: jamaBalance && (jamaBalance.fine_gold_balance > 0 || jamaBalance.cash_balance > 0)
-                        ? "#fff8e1" : "#f0fff4",
-                      border: jamaBalance && (jamaBalance.fine_gold_balance > 0 || jamaBalance.cash_balance > 0)
-                        ? "1px solid #f59e0b" : "1px solid #6ee7b7",
+                      background: (jamaBalance?.fine_gold_balance ?? 0) < -0.0001 || (jamaBalance?.cash_balance ?? 0) < -0.01
+                        ? "#ecfdf5"
+                        : (jamaBalance?.fine_gold_balance ?? 0) > 0.0001 || (jamaBalance?.cash_balance ?? 0) > 0.01
+                        ? "#fff8e1"
+                        : "#f0fff4",
+                      border: (jamaBalance?.fine_gold_balance ?? 0) < -0.0001 || (jamaBalance?.cash_balance ?? 0) < -0.01
+                        ? "1px solid #10b981"
+                        : (jamaBalance?.fine_gold_balance ?? 0) > 0.0001 || (jamaBalance?.cash_balance ?? 0) > 0.01
+                        ? "1px solid #f59e0b"
+                        : "1px solid #6ee7b7",
                       display: "flex", gap: 18, alignItems: "center"
                     }}>
-                      <Scale size={14} style={{ color: "#b8860b", flexShrink: 0 }} />
+                      <Scale size={14} style={{ color: (jamaBalance?.fine_gold_balance ?? 0) < -0.0001 ? "#059669" : "#b8860b", flexShrink: 0 }} />
                       <div>
-                        <div style={{ fontSize: 9, color: "#92400e", fontWeight: "bold", letterSpacing: 0.5 }}>JAMA BALANCE (PREVIOUS DUE)</div>
+                        <div style={{
+                          fontSize: 9,
+                          color: (jamaBalance?.fine_gold_balance ?? 0) < -0.0001 ? "#065f46" : "#92400e",
+                          fontWeight: "bold", letterSpacing: 0.5
+                        }}>
+                          {(jamaBalance?.fine_gold_balance ?? 0) < -0.0001
+                            ? "ADVANCE IN STOCK (WILL BE DEDUCTED FROM THIS BILL)"
+                            : "JAMA BALANCE (PREVIOUS DUE)"}
+                        </div>
                         <div style={{ display: "flex", gap: 16, marginTop: 2 }}>
                           <div>
-                            <span style={{ fontSize: 9, color: "#78350f" }}>Fine Gold: </span>
-                            <strong style={{ fontSize: 13, color: jamaBalance && jamaBalance.fine_gold_balance > 0 ? "#b45309" : "#166534" }}>
-                              {(jamaBalance?.fine_gold_balance ?? 0).toFixed(3)} g
+                            <span style={{ fontSize: 9, color: (jamaBalance?.fine_gold_balance ?? 0) < -0.0001 ? "#065f46" : "#78350f" }}>Fine Gold: </span>
+                            <strong style={{
+                              fontSize: 13,
+                              color: (jamaBalance?.fine_gold_balance ?? 0) < -0.0001
+                                ? "#059669"
+                                : (jamaBalance?.fine_gold_balance ?? 0) > 0.0001
+                                ? "#b45309"
+                                : "#166534"
+                            }}>
+                              {(jamaBalance?.fine_gold_balance ?? 0) < -0.0001
+                                ? `${Math.abs(jamaBalance?.fine_gold_balance ?? 0).toFixed(3)} g (ADVANCE)`
+                                : `${(jamaBalance?.fine_gold_balance ?? 0).toFixed(3)} g`}
                             </strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: 9, color: "#78350f" }}>Cash: </span>
-                            <strong style={{ fontSize: 13, color: jamaBalance && jamaBalance.cash_balance > 0 ? "#b45309" : "#166534" }}>
-                              ₹{(jamaBalance?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <span style={{ fontSize: 9, color: (jamaBalance?.cash_balance ?? 0) < -0.01 ? "#065f46" : "#78350f" }}>Cash: </span>
+                            <strong style={{
+                              fontSize: 13,
+                              color: (jamaBalance?.cash_balance ?? 0) < -0.01
+                                ? "#059669"
+                                : (jamaBalance?.cash_balance ?? 0) > 0.01
+                                ? "#b45309"
+                                : "#166534"
+                            }}>
+                              {(jamaBalance?.cash_balance ?? 0) < -0.01
+                                ? `₹${Math.abs(jamaBalance?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (ADVANCE)`
+                                : `₹${(jamaBalance?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                             </strong>
                           </div>
                         </div>
@@ -404,33 +440,62 @@ export default function NewBillPage() {
                             <td colSpan={2} style={{ padding: "2px 10px", background: "#f0fdf4", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: "bold", color: "#166534", letterSpacing: 0.5 }}>CASH JAMA (₹)</td>
                           </tr>
                           <tr>
-                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>Previous Jama</td>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>
+                              {prevJamaCash < -0.01 ? "Previous Advance (−)" : prevJamaCash > 0.01 ? "Previous Due (+)" : "Previous Balance"}
+                            </td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={prevJamaCash > 0 ? prevJamaCash.toFixed(2) : "0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: prevJamaCash > 0 ? "#15803d" : "#666" }} />
+                              <input
+                                type="text"
+                                value={prevJamaCash < -0.01 ? `−₹${Math.abs(prevJamaCash).toFixed(2)}` : prevJamaCash > 0.01 ? `+₹${prevJamaCash.toFixed(2)}` : "₹0.00"}
+                                readOnly
+                                style={{
+                                  ...inp,
+                                  textAlign: "right",
+                                  background: prevJamaCash < -0.01 ? "#ecfdf5" : "#f0fdf4",
+                                  cursor: "default",
+                                  color: prevJamaCash < -0.01 ? "#059669" : prevJamaCash > 0 ? "#15803d" : "#666",
+                                  fontWeight: prevJamaCash !== 0 ? "bold" : "normal"
+                                }}
+                              />
                             </td>
                           </tr>
                           <tr>
                             <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>This Bill Issue Cash (+)</td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={issueCashNum > 0 ? `+${issueCashNum.toFixed(2)}` : "0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
+                              <input type="text" value={issueCashNum > 0 ? `+₹${issueCashNum.toFixed(2)}` : "₹0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
                             </td>
                           </tr>
                           <tr>
                             <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, fontWeight: "bold" }}>Total Cash Due</td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={totalCashDue.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", background: "#dcfce7", fontWeight: "bold", cursor: "default", color: "#166534" }} />
+                              <input type="text" value={`₹${totalCashDue.toFixed(2)}`} readOnly style={{ ...inp, textAlign: "right", background: "#dcfce7", fontWeight: "bold", cursor: "default", color: "#166534" }} />
                             </td>
                           </tr>
                           <tr>
                             <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11 }}>Received Cash (−)</td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={recvCashNum > 0 ? `−${recvCashNum.toFixed(2)}` : "0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
+                              <input type="text" value={recvCashNum > 0 ? `−₹${recvCashNum.toFixed(2)}` : "₹0.00"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
                             </td>
                           </tr>
-                          <tr style={{ background: "#dcfce7" }}>
-                            <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5, color: "#166534" }}>Closing Jama Cash</td>
+                          <tr style={{ background: closingJamaCash < -0.01 ? "#ecfdf5" : "#dcfce7" }}>
+                            <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 11.5, color: closingJamaCash < -0.01 ? "#059669" : "#166534" }}>
+                              {closingJamaCash < -0.01 ? "Closing Advance (Stock)" : closingJamaCash > 0.01 ? "Closing Due Cash" : "Closing Cash"}
+                            </td>
                             <td style={{ padding: "2px 6px" }}>
-                              <input type="text" value={closingJamaCash.toFixed(2)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 12, background: "#dcfce7", cursor: "default", color: "#166534" }} />
+                              <input
+                                type="text"
+                                value={closingJamaCash < -0.01 ? `₹${Math.abs(closingJamaCash).toFixed(2)} Adv` : closingJamaCash > 0.01 ? `₹${closingJamaCash.toFixed(2)} Due` : "₹0.00 (Cleared)"}
+                                readOnly
+                                style={{
+                                  ...inp,
+                                  textAlign: "right",
+                                  fontWeight: "bold",
+                                  fontSize: 12,
+                                  background: closingJamaCash < -0.01 ? "#ecfdf5" : "#dcfce7",
+                                  cursor: "default",
+                                  color: closingJamaCash < -0.01 ? "#059669" : "#166534"
+                                }}
+                              />
                             </td>
                           </tr>
                         </tbody>
@@ -443,9 +508,23 @@ export default function NewBillPage() {
                             <td colSpan={2} style={{ padding: "2px 10px", background: "#fef9e7", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 10, fontWeight: "bold", color: "#92400e", letterSpacing: 0.5 }}>FINE GOLD JAMA (grams)</td>
                           </tr>
                           <tr>
-                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>Previous Jama</td>
+                            <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, width: "60%" }}>
+                              {prevJamaGold < -0.0001 ? "Previous Advance (−)" : prevJamaGold > 0.0001 ? "Previous Due (+)" : "Previous Balance"}
+                            </td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={prevJamaGold > 0 ? prevJamaGold.toFixed(3) : "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#fef9e7", cursor: "default", color: prevJamaGold > 0 ? "#b45309" : "#666" }} />
+                              <input
+                                type="text"
+                                value={prevJamaGold < -0.0001 ? `−${Math.abs(prevJamaGold).toFixed(3)} g` : prevJamaGold > 0.0001 ? `+${prevJamaGold.toFixed(3)} g` : "0.000 g"}
+                                readOnly
+                                style={{
+                                  ...inp,
+                                  textAlign: "right",
+                                  background: prevJamaGold < -0.0001 ? "#ecfdf5" : "#fef9e7",
+                                  cursor: "default",
+                                  color: prevJamaGold < -0.0001 ? "#059669" : prevJamaGold > 0 ? "#b45309" : "#666",
+                                  fontWeight: prevJamaGold !== 0 ? "bold" : "normal"
+                                }}
+                              />
                             </td>
                           </tr>
                           <tr>
@@ -457,7 +536,7 @@ export default function NewBillPage() {
                           <tr>
                             <td style={{ padding: "2px 10px", borderBottom: "1px solid #ddd", fontFamily: "Courier New, monospace", fontSize: 11, fontWeight: "bold" }}>Total Fine Due</td>
                             <td style={{ padding: "1px 6px", borderBottom: "1px solid #ddd" }}>
-                              <input type="text" value={totalGoldDue.toFixed(3)} readOnly style={{ ...inp, textAlign: "right", background: "#fff8e1", fontWeight: "bold", cursor: "default", color: "#92400e" }} />
+                              <input type="text" value={`${totalGoldDue.toFixed(3)} g`} readOnly style={{ ...inp, textAlign: "right", background: "#fff8e1", fontWeight: "bold", cursor: "default", color: "#92400e" }} />
                             </td>
                           </tr>
                           <tr>
@@ -466,10 +545,25 @@ export default function NewBillPage() {
                               <input type="text" value={recvFineNum > 0 ? `−${recvFineNum.toFixed(3)}` : "0.000"} readOnly style={{ ...inp, textAlign: "right", background: "#f0fdf4", cursor: "default", color: "#166534" }} />
                             </td>
                           </tr>
-                          <tr style={{ background: "#fff3cd" }}>
-                            <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 13, color: "#856404" }}>Closing Jama Gold</td>
+                          <tr style={{ background: closingJamaGold < -0.0001 ? "#ecfdf5" : "#fff3cd" }}>
+                            <td style={{ padding: "4px 10px", fontWeight: "bold", fontFamily: "Courier New, monospace", fontSize: 13, color: closingJamaGold < -0.0001 ? "#059669" : "#856404" }}>
+                              {closingJamaGold < -0.0001 ? "Closing Advance (Stock)" : closingJamaGold > 0.0001 ? "Closing Due Gold" : "Closing Fine Gold"}
+                            </td>
                             <td style={{ padding: "2px 6px" }}>
-                              <input type="text" value={closingJamaGold.toFixed(3)} readOnly style={{ ...inp, textAlign: "right", fontWeight: "bold", fontSize: 14, background: "#fff3cd", cursor: "default", color: "#856404" }} />
+                              <input
+                                type="text"
+                                value={closingJamaGold < -0.0001 ? `${Math.abs(closingJamaGold).toFixed(3)} g Adv` : closingJamaGold > 0.0001 ? `${closingJamaGold.toFixed(3)} g Due` : "0.000 g (Cleared)"}
+                                readOnly
+                                style={{
+                                  ...inp,
+                                  textAlign: "right",
+                                  fontWeight: "bold",
+                                  fontSize: 14,
+                                  background: closingJamaGold < -0.0001 ? "#ecfdf5" : "#fff3cd",
+                                  cursor: "default",
+                                  color: closingJamaGold < -0.0001 ? "#059669" : "#856404"
+                                }}
+                              />
                             </td>
                           </tr>
                         </tbody>

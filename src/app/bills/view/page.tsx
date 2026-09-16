@@ -169,13 +169,13 @@ function BillDetailContent() {
   const handleWhatsAppShare = () => {
     setDownloadOpen(false);
     if (!bill) return;
-    const closingGold = bill.closingFineGold
-      ? `${parseFloat(bill.closingFineGold).toFixed(3)} g`
-      : "0.000 g";
+    const closingVal = parseFloat(bill.closingFineGold ?? "0");
     const statusText =
-      parseFloat(bill.closingFineGold ?? "0") <= 0.0001
-        ? "Account Cleared (0.000 g)"
-        : `Balance Due: ${closingGold}`;
+      closingVal < -0.0001
+        ? `Advance: ${Math.abs(closingVal).toFixed(3)} g`
+        : closingVal > 0.0001
+        ? `Balance Due: ${closingVal.toFixed(3)} g`
+        : "Account Cleared (0.000 g)";
     const text = encodeURIComponent(
       `*${bill.customerName.toUpperCase()} — Gold Bill Voucher*\n` +
         `Voucher No: ${bill.voucherNo}\n` +

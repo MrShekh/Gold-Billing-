@@ -209,5 +209,5 @@ export async function generateVoucherNo(): Promise<string> {
 // ─── DASHBOARD STATS ──────────────────────────────────────────────────────────
 export async function getDashboardStats() {
   try { return await apiFetch("/api/stats"); }
-  catch { return { totalCustomers: 0, totalBills: 0, todayBills: 0, totalJamaGold: 0, totalJamaCash: 0 }; }
+  catch { return { totalCustomers: 0, totalBills: 0, todayBills: 0, totalJamaGold: 0, totalJamaCash: 0, totalAdvanceGold: 0, totalAdvanceCash: 0, advanceCustomerCount: 0 }; }
 }

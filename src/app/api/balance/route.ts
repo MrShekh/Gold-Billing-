@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
         await connectDB();
         const { customerId, paidFineGold, paidCash } = await req.json();
         const prev = await CustomerBalanceModel.findOne({ userId, customerId });
-        const newFineGold = Math.max(0, (prev?.fineGoldBalance ?? 0) - (paidFineGold || 0));
-        const newCash = Math.max(0, (prev?.cashBalance ?? 0) - (paidCash || 0));
+        const newFineGold = Number(((prev?.fineGoldBalance ?? 0) - (paidFineGold || 0)).toFixed(3));
+        const newCash = Number(((prev?.cashBalance ?? 0) - (paidCash || 0)).toFixed(2));
 
         await CustomerBalanceModel.findOneAndUpdate(
             { userId, customerId },

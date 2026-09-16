@@ -292,17 +292,33 @@ export default function CustomersPage() {
                             </span>
                           </td>
                           <td>
-                            {balances[c.id] !== undefined ? (
-                              <div style={{ fontSize: 12 }}>
-                                <div style={{ color: balances[c.id] && (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#f59e0b" : "var(--text-muted)" }}>
-                                  <Scale size={11} style={{ marginRight: 3, verticalAlign: "middle" }} />
-                                  {(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g
+                            {balances[c.id] !== undefined ? (() => {
+                              const bal = balances[c.id];
+                              const gold = bal?.fine_gold_balance ?? 0;
+                              const cash = bal?.cash_balance ?? 0;
+                              return (
+                                <div style={{ fontSize: 12 }}>
+                                  <div style={{
+                                    color: gold < -0.0001 ? "var(--success)" : gold > 0.0001 ? "#f59e0b" : "var(--text-muted)",
+                                    fontWeight: gold !== 0 ? 700 : "normal"
+                                  }}>
+                                    <Scale size={11} style={{ marginRight: 3, verticalAlign: "middle" }} />
+                                    {gold < -0.0001
+                                      ? `${Math.abs(gold).toFixed(3)} g (Adv)`
+                                      : `${gold.toFixed(3)} g`}
+                                  </div>
+                                  <div style={{
+                                    color: cash < -0.01 ? "var(--success)" : cash > 0.01 ? "#f59e0b" : "var(--text-muted)",
+                                    fontWeight: cash !== 0 ? 700 : "normal",
+                                    marginTop: 2
+                                  }}>
+                                    {cash < -0.01
+                                      ? `₹${Math.abs(cash).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Adv)`
+                                      : `₹${cash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+                                  </div>
                                 </div>
-                                <div style={{ color: balances[c.id] && (balances[c.id]?.cash_balance ?? 0) > 0 ? "#f59e0b" : "var(--text-muted)", marginTop: 2 }}>
-                                  ₹{(balances[c.id]?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                                </div>
-                              </div>
-                            ) : (
+                              );
+                            })() : (
                               <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
                             )}
                           </td>
@@ -328,28 +344,30 @@ export default function CustomersPage() {
                             </div>
                           </td>
                         </tr>
-                        {/* Record Payment Panel */}
+                        {/* Payment panel row */}
                         {payPanelId === c.id && (
-                          <tr key={`pay-${c.id}`}>
-                            <td colSpan={7} style={{ padding: 0 }}>
+                          <tr>
+                            <td colSpan={7} style={{ background: "var(--bg-secondary)", padding: "16px 20px", borderBottom: "2px solid var(--accent)" }}>
                               <div style={{
-                                background: "rgba(245,158,11,0.07)",
-                                border: "1px solid rgba(245,158,11,0.25)",
-                                borderTop: "none",
-                                padding: "14px 18px",
+                                background: "var(--bg-card)", border: "1px solid var(--border)",
+                                borderRadius: 8, padding: "14px 18px", maxWidth: 640
                               }}>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                                   <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text-primary)" }}>
-                                    💰 Record Payment — {c.name}
+                                    💰 Record Payment / Settle — {c.name}
                                   </div>
                                   <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                                    Current Jama: &nbsp;
-                                    <strong style={{ color: "#f59e0b" }}>
-                                      {(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g
+                                    Current Status: &nbsp;
+                                    <strong style={{ color: (balances[c.id]?.fine_gold_balance ?? 0) < -0.0001 ? "#10b981" : "#f59e0b" }}>
+                                      {(balances[c.id]?.fine_gold_balance ?? 0) < -0.0001
+                                        ? `${Math.abs(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g (Adv)`
+                                        : `${(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g`}
                                     </strong>
                                     &nbsp;|&nbsp;
-                                    <strong style={{ color: "#f59e0b" }}>
-                                      ₹{(balances[c.id]?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                    <strong style={{ color: (balances[c.id]?.cash_balance ?? 0) < -0.01 ? "#10b981" : "#f59e0b" }}>
+                                      {(balances[c.id]?.cash_balance ?? 0) < -0.01
+                                        ? `₹${Math.abs(balances[c.id]?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Adv)`
+                                        : `₹${(balances[c.id]?.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
                                     </strong>
                                   </div>
                                 </div>
@@ -358,15 +376,19 @@ export default function CustomersPage() {
                                   <div>
                                     <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 2 }}>Fine Gold Paid (grams)</div>
                                     <div style={{ fontSize: 11, marginBottom: 5, display: "flex", alignItems: "center", gap: 6 }}>
-                                      <span style={{ color: "var(--text-muted)" }}>Outstanding:</span>
+                                      <span style={{ color: "var(--text-muted)" }}>
+                                        {(balances[c.id]?.fine_gold_balance ?? 0) < -0.0001 ? "Advance in Stock:" : "Outstanding Due:"}
+                                      </span>
                                       <span style={{
                                         fontWeight: 700,
-                                        color: (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#b45309" : "#166534",
-                                        background: (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#fef9e7" : "#f0fdf4",
-                                        border: `1px solid ${(balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#fde68a" : "#bbf7d0"}`,
+                                        color: (balances[c.id]?.fine_gold_balance ?? 0) < -0.0001 ? "#059669" : (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#b45309" : "#166534",
+                                        background: (balances[c.id]?.fine_gold_balance ?? 0) < -0.0001 ? "#ecfdf5" : (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#fef9e7" : "#f0fdf4",
+                                        border: `1px solid ${(balances[c.id]?.fine_gold_balance ?? 0) < -0.0001 ? "#a7f3d0" : (balances[c.id]?.fine_gold_balance ?? 0) > 0 ? "#fde68a" : "#bbf7d0"}`,
                                         borderRadius: 4, padding: "1px 7px", fontSize: 12
                                       }}>
-                                        {(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g
+                                        {(balances[c.id]?.fine_gold_balance ?? 0) < -0.0001
+                                          ? `${Math.abs(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g (Adv)`
+                                          : `${(balances[c.id]?.fine_gold_balance ?? 0).toFixed(3)} g`}
                                       </span>
                                     </div>
                                     <input

@@ -264,14 +264,18 @@ export default function CustomerLedgerPage() {
                     padding: "20px 24px",
                     borderRadius: 10,
                     background: "var(--bg-card)",
-                    border: currentGoldDue > 0 ? "1px solid rgba(184,134,11,0.35)" : "1px solid var(--border)",
+                    border: currentGoldDue < -0.0001
+                      ? "1px solid rgba(16,185,129,0.35)"
+                      : currentGoldDue > 0.0001
+                      ? "1px solid rgba(184,134,11,0.35)"
+                      : "1px solid var(--border)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                      Fine Gold Balance (Jama)
+                      {currentGoldDue < -0.0001 ? "Advance Gold (In Stock)" : "Fine Gold Balance (Due)"}
                     </span>
-                    <Scale size={18} style={{ color: "var(--accent)" }} />
+                    <Scale size={18} style={{ color: currentGoldDue < -0.0001 ? "var(--success)" : "var(--accent)" }} />
                   </div>
                   <div
                     style={{
@@ -279,13 +283,18 @@ export default function CustomerLedgerPage() {
                       fontWeight: 800,
                       fontFamily: "monospace",
                       marginTop: 8,
-                      color: currentGoldDue > 0 ? "var(--accent)" : "var(--success)",
+                      color: currentGoldDue < -0.0001 ? "var(--success)" : currentGoldDue > 0.0001 ? "var(--accent)" : "var(--success)",
                     }}
                   >
-                    {currentGoldDue.toFixed(3)} <span style={{ fontSize: 18, fontWeight: 700 }}>g</span>
+                    {currentGoldDue < -0.0001
+                      ? `${Math.abs(currentGoldDue).toFixed(3)}`
+                      : currentGoldDue.toFixed(3)}{" "}
+                    <span style={{ fontSize: 18, fontWeight: 700 }}>g</span>
                   </div>
                   <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-muted)" }}>
-                    {currentGoldDue > 0 ? (
+                    {currentGoldDue < -0.0001 ? (
+                      <span style={{ color: "var(--success)", fontWeight: 600 }}>● Advance gold deposited by customer</span>
+                    ) : currentGoldDue > 0.0001 ? (
                       <span style={{ color: "var(--accent)", fontWeight: 600 }}>● Outstanding to receive</span>
                     ) : (
                       <span style={{ color: "var(--success)", fontWeight: 600 }}>✓ All accounts cleared</span>
@@ -300,17 +309,29 @@ export default function CustomerLedgerPage() {
                     padding: "20px 24px",
                     borderRadius: 10,
                     background: "var(--bg-card)",
-                    border: "1px solid var(--border)",
+                    border: currentCashDue < -0.01
+                      ? "1px solid rgba(16,185,129,0.35)"
+                      : currentCashDue > 0.01
+                      ? "1px solid rgba(184,134,11,0.35)"
+                      : "1px solid var(--border)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                      Cash Balance
+                      {currentCashDue < -0.01 ? "Advance Cash (Deposit)" : "Cash Balance (Due)"}
                     </span>
                     <CreditCard size={18} style={{ color: "var(--info)" }} />
                   </div>
-                  <div style={{ fontSize: 30, fontWeight: 800, fontFamily: "monospace", marginTop: 8, color: "var(--text-primary)" }}>
-                    ₹ {currentCashDue.toFixed(2)}
+                  <div style={{
+                    fontSize: 30,
+                    fontWeight: 800,
+                    fontFamily: "monospace",
+                    marginTop: 8,
+                    color: currentCashDue < -0.01 ? "var(--success)" : "var(--text-primary)"
+                  }}>
+                    {currentCashDue < -0.01
+                      ? `₹ ${Math.abs(currentCashDue).toFixed(2)} (Adv)`
+                      : `₹ ${currentCashDue.toFixed(2)}`}
                   </div>
                   <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-secondary)" }}>
                     <strong style={{ color: "var(--text-primary)" }}>{stats.billCount}</strong> Bill{stats.billCount === 1 ? "" : "s"} &nbsp;•&nbsp;
@@ -431,7 +452,15 @@ export default function CustomerLedgerPage() {
                             {/* Summary numbers strip */}
                             <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 14 }}>
                               <span style={{ color: "var(--text-muted)" }}>
-                                Prev: <strong style={{ color: "var(--text-primary)", fontFamily: "monospace", fontSize: 14 }}>{prevFine.toFixed(3)}g</strong>
+                                Prev: <strong style={{
+                                  color: prevFine < -0.0001 ? "var(--success)" : "var(--text-primary)",
+                                  fontFamily: "monospace",
+                                  fontSize: 14
+                                }}>
+                                  {prevFine < -0.0001
+                                    ? `${Math.abs(prevFine).toFixed(3)}g (Adv)`
+                                    : `${prevFine.toFixed(3)}g`}
+                                </strong>
                               </span>
                               {issueFine > 0 && (
                                 <span style={{ color: "var(--accent)" }}>
@@ -447,19 +476,18 @@ export default function CustomerLedgerPage() {
                                 style={{
                                   fontWeight: 800,
                                   fontSize: 15,
-                                  color: "var(--accent)",
-                                  background: "rgba(184,134,11,0.1)",
+                                  color: closingFine < -0.0001 ? "var(--success)" : "var(--accent)",
+                                  background: closingFine < -0.0001 ? "rgba(16,185,129,0.12)" : "rgba(184,134,11,0.1)",
                                   padding: "4px 10px",
                                   borderRadius: 6,
-                                  border: "1px solid rgba(184,134,11,0.25)",
+                                  border: `1px solid ${closingFine < -0.0001 ? "rgba(16,185,129,0.3)" : "rgba(184,134,11,0.25)"}`,
                                 }}
                               >
-                                Balance After Bill: <strong style={{ fontFamily: "monospace", fontSize: 16 }}>{closingFine.toFixed(3)} g</strong>
-                                {currentGoldDue <= 0.0001 && (
-                                  <span style={{ marginLeft: 6, fontSize: 12, color: "var(--success)", fontWeight: 700 }}>
-                                    (Settled ✓)
-                                  </span>
-                                )}
+                                {closingFine < -0.0001
+                                  ? <>Advance After Bill: <strong style={{ fontFamily: "monospace", fontSize: 16 }}>{Math.abs(closingFine).toFixed(3)} g (Adv)</strong></>
+                                  : closingFine > 0.0001
+                                  ? <>Due After Bill: <strong style={{ fontFamily: "monospace", fontSize: 16 }}>{closingFine.toFixed(3)} g</strong></>
+                                  : <>Balance: <strong style={{ fontFamily: "monospace", fontSize: 16 }}>0.000 g</strong> <span style={{ marginLeft: 6, fontSize: 12, color: "var(--success)", fontWeight: 700 }}>(Settled ✓)</span></>}
                               </span>
                             </div>
 

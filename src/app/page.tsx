@@ -5,10 +5,19 @@ import Sidebar from "@/components/Sidebar";
 import AuthGuard from "@/components/AuthGuard";
 import { getDashboardStats, getBills, getCustomers } from "@/lib/db";
 import type { Bill, Customer } from "@/lib/db";
-import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp } from "lucide-react";
+import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp, Layers } from "lucide-react";
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({ totalCustomers: 0, totalBills: 0, todayBills: 0, totalJamaGold: 0, totalJamaCash: 0 });
+  const [stats, setStats] = useState({
+    totalCustomers: 0,
+    totalBills: 0,
+    todayBills: 0,
+    totalJamaGold: 0,
+    totalJamaCash: 0,
+    totalAdvanceGold: 0,
+    totalAdvanceCash: 0,
+    advanceCustomerCount: 0,
+  });
   const [recentBills, setRecentBills] = useState<Bill[]>([]);
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
 
@@ -16,7 +25,7 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         const statsData = await getDashboardStats();
-        setStats(statsData);
+        setStats(statsData as typeof stats);
         
         const billsData = await getBills();
         const sortedBills = billsData.sort(
@@ -49,10 +58,10 @@ export default function DashboardPage() {
         <div className="main-layout" style={{ flex: 1 }}>
           <div className="page-header">
             <h2>Dashboard</h2>
-            <p>Overview of your billing activity</p>
+            <p>Overview of your billing activity &amp; stock</p>
           </div>
           <div className="page-content">
-            {/* Stat Cards */}
+            {/* Stat Cards Row 1 */}
             <div className="grid-3 mb-4">
               <div className="stat-card">
                 <div className="flex-between mb-2"><span className="stat-label">Total Customers</span><div className="stat-icon"><Users size={18} /></div></div>
@@ -71,17 +80,59 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="grid-2 mb-4">
+            {/* Stat Cards Row 2: Outstanding Due vs Advance Stock */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 24 }}>
               <div className="stat-card" style={{ borderColor: "rgba(212,168,67,0.3)" }}>
-                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Total Gold Jama</span><div className="stat-icon"><TrendingUp size={18} /></div></div>
-                <div className="stat-value" style={{ fontSize: 32 }}>{stats.totalJamaGold.toFixed(3)} g</div>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding across all customers</p>
+                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Pending Gold Due</span><div className="stat-icon"><TrendingUp size={18} /></div></div>
+                <div className="stat-value" style={{ fontSize: 28 }}>{stats.totalJamaGold.toFixed(3)} g</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding to receive</p>
               </div>
-              <div className="stat-card" style={{ borderColor: "rgba(76,175,125,0.3)" }}>
-                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--success)" }}>Total Cash Jama</span><div className="stat-icon" style={{ color: "var(--success)", background: "rgba(76,175,125,0.15)", borderColor: "rgba(76,175,125,0.3)" }}>₹</div></div>
-                <div className="stat-value" style={{ fontSize: 32, color: "var(--success)" }}>₹{stats.totalJamaCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding across all customers</p>
+
+              <Link href="/stock" style={{ textDecoration: "none" }}>
+                <div className="stat-card" style={{
+                  background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
+                  borderColor: "rgba(16,185,129,0.35)",
+                  cursor: "pointer"
+                }}>
+                  <div className="flex-between mb-2">
+                    <span className="stat-label" style={{ color: "var(--success)" }}>Total Advance Gold Stock</span>
+                    <div className="stat-icon" style={{ color: "var(--success)", background: "rgba(16,185,129,0.15)", borderColor: "rgba(16,185,129,0.3)" }}>
+                      <TrendingUp size={18} />
+                    </div>
+                  </div>
+                  <div className="stat-value" style={{ fontSize: 28, color: "var(--success)" }}>
+                    {(stats.totalAdvanceGold || 0).toFixed(3)} g
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                    Held from customers &nbsp;•&nbsp; View Stock <ArrowRight size={11} />
+                  </p>
+                </div>
+              </Link>
+
+              <div className="stat-card" style={{ borderColor: "rgba(212,168,67,0.3)" }}>
+                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Pending Cash Due</span><div className="stat-icon" style={{ color: "var(--accent)" }}>₹</div></div>
+                <div className="stat-value" style={{ fontSize: 28 }}>₹{stats.totalJamaCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding to receive</p>
               </div>
+
+              <Link href="/stock" style={{ textDecoration: "none" }}>
+                <div className="stat-card" style={{
+                  background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
+                  borderColor: "rgba(16,185,129,0.35)",
+                  cursor: "pointer"
+                }}>
+                  <div className="flex-between mb-2">
+                    <span className="stat-label" style={{ color: "var(--success)" }}>Total Advance Cash</span>
+                    <div className="stat-icon" style={{ color: "var(--success)", background: "rgba(16,185,129,0.15)", borderColor: "rgba(16,185,129,0.3)" }}>₹</div>
+                  </div>
+                  <div className="stat-value" style={{ fontSize: 28, color: "var(--success)" }}>
+                    ₹{(stats.totalAdvanceCash || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                    Customer cash advance &nbsp;•&nbsp; View Stock <ArrowRight size={11} />
+                  </p>
+                </div>
+              </Link>
             </div>
 
             {/* Quick Actions */}
@@ -93,6 +144,7 @@ export default function DashboardPage() {
               <div className="flex gap-3">
                 <Link href="/customers" className="btn btn-secondary btn-sm"><Users size={14} /> Add Customer</Link>
                 <Link href="/bills/new" className="btn btn-primary btn-sm"><PlusCircle size={14} /> Create Bill</Link>
+                <Link href="/stock" className="btn btn-secondary btn-sm"><Layers size={14} /> Advance Stock</Link>
               </div>
             </div>
 

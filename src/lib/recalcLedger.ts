@@ -47,9 +47,11 @@ export async function recalculateCustomerLedger(userId: string, customerId: stri
         const prevFine = runningGold;
         const prevCash = runningCash;
 
-        // Running balance after this bill (clamped at 0 to avoid negative balance unless intentional)
-        runningGold = Math.max(0, runningGold + billFineNet);
-        runningCash = Math.max(0, runningCash + billCashNet);
+        // Running balance after this bill:
+        // positive (+) = Due (customer owes shop)
+        // negative (-) = Advance (customer has deposited extra gold/cash with shop)
+        runningGold = Number((runningGold + billFineNet).toFixed(3));
+        runningCash = Number((runningCash + billCashNet).toFixed(2));
 
         bill.prevFineGold = prevFine.toFixed(3);
         bill.closingFineGold = runningGold.toFixed(3);

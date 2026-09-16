@@ -441,16 +441,40 @@ export default function BillsPage() {
                             </div>
                           </td>
                           <td>
-                            {b.closingFineGold !== undefined && b.closingFineGold !== null ? (
-                              <span style={{ fontWeight: 600, color: "var(--text-primary)", fontFamily: "monospace", fontSize: 13.5 }}>
-                                {parseFloat(b.closingFineGold as string || "0").toFixed(3)} g
-                              </span>
-                            ) : (
+                            {b.closingFineGold !== undefined && b.closingFineGold !== null ? (() => {
+                              const cVal = parseFloat(b.closingFineGold as string || "0");
+                              return (
+                                <span style={{
+                                  fontWeight: 700,
+                                  color: cVal < -0.0001 ? "var(--success)" : "var(--text-primary)",
+                                  fontFamily: "monospace",
+                                  fontSize: 13.5
+                                }}>
+                                  {cVal < -0.0001
+                                    ? `${Math.abs(cVal).toFixed(3)} g (Adv)`
+                                    : `${cVal.toFixed(3)} g`}
+                                </span>
+                              );
+                            })() : (
                               <span style={{ color: "var(--text-muted)" }}>—</span>
                             )}
                           </td>
                           <td>
-                            {currentDue <= 0.0001 ? (
+                            {currentDue < -0.0001 ? (
+                              <span
+                                className="badge"
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  background: "rgba(16,185,129,0.15)",
+                                  color: "#10b981",
+                                  border: "1px solid rgba(16,185,129,0.3)"
+                                }}
+                                title="Customer has deposited gold in advance"
+                              >
+                                Advance {Math.abs(currentDue).toFixed(3)} g
+                              </span>
+                            ) : currentDue <= 0.0001 ? (
                               <span
                                 className="badge badge-success"
                                 style={{ fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}

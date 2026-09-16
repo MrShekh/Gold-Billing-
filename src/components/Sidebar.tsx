@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Users, FileText, PlusCircle, LogOut, Menu, Settings } from "lucide-react";
+import { LayoutDashboard, Users, FileText, PlusCircle, LogOut, Menu, Settings, Layers } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/customers", label: "Customers", icon: Users },
   { href: "/bills", label: "Bills", icon: FileText },
   { href: "/bills/new", label: "New Bill", icon: PlusCircle },
+  { href: "/stock", label: "Advance Stock", icon: Layers },
   { href: "/profile", label: "Settings", icon: Settings },
 ];
 

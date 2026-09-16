@@ -471,10 +471,12 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
               (acc, i) => acc + (parseFloat(i.fineGold || "0") || 0),
               0
             );
-          const totalFineDue = prevFine + issueFine;
-          const closingFine = bill.closingFineGold
-            ? parseFloat(bill.closingFineGold)
-            : Math.max(0, totalFineDue - recvFine);
+          const netFineBeforeRecv = prevFine + issueFine;
+          const totalFineDue = Math.max(0, netFineBeforeRecv);
+          const closingFine =
+            bill.closingFineGold !== undefined && bill.closingFineGold !== ""
+              ? parseFloat(bill.closingFineGold)
+              : netFineBeforeRecv - recvFine;
 
           const prevCash = parseFloat(bill.previousBalance ?? "0") || 0;
           const issueCash = issueItems.reduce(
@@ -485,10 +487,12 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
             (acc, i) => acc + (parseFloat(i.amount || "0") || 0),
             0
           );
-          const totalCashDue = prevCash + issueCash;
-          const closingCash = bill.closingBalance
-            ? parseFloat(bill.closingBalance)
-            : Math.max(0, totalCashDue - recvCash);
+          const netCashBeforeRecv = prevCash + issueCash;
+          const totalCashDue = Math.max(0, netCashBeforeRecv);
+          const closingCash =
+            bill.closingBalance !== undefined && bill.closingBalance !== ""
+              ? parseFloat(bill.closingBalance)
+              : netCashBeforeRecv - recvCash;
 
           return (
             <table
@@ -547,7 +551,7 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               lineHeight: 1.35,
                             }}
                           >
-                            Previous Jama
+                            {prevCash < -0.01 ? "Previous Advance (−)" : prevCash > 0.01 ? "Previous Due (+)" : "Previous Balance"}
                           </td>
                           <td
                             style={{
@@ -556,11 +560,11 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
-                              color: "#000000",
+                              color: prevCash < -0.01 ? "#166534" : "#000000",
                               lineHeight: 1.35,
                             }}
                           >
-                            {prevCash > 0 ? prevCash.toFixed(2) : "0.00"}
+                            {prevCash < -0.01 ? `−₹${Math.abs(prevCash).toFixed(2)}` : prevCash > 0.01 ? `+₹${prevCash.toFixed(2)}` : "₹0.00"}
                           </td>
                         </tr>
                         <tr>
@@ -587,7 +591,7 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               lineHeight: 1.35,
                             }}
                           >
-                            {issueCash > 0 ? `+${issueCash.toFixed(2)}` : "0.00"}
+                            {issueCash > 0 ? `+₹${issueCash.toFixed(2)}` : "₹0.00"}
                           </td>
                         </tr>
                         <tr>
@@ -614,7 +618,7 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               lineHeight: 1.35,
                             }}
                           >
-                            {totalCashDue.toFixed(2)}
+                            {`₹${totalCashDue.toFixed(2)}`}
                           </td>
                         </tr>
                         <tr>
@@ -641,20 +645,20 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               lineHeight: 1.35,
                             }}
                           >
-                            {recvCash > 0 ? `−${recvCash.toFixed(2)}` : "0.00"}
+                            {recvCash > 0 ? `−₹${recvCash.toFixed(2)}` : "₹0.00"}
                           </td>
                         </tr>
-                        <tr style={{ background: "#dcfce7" }}>
+                        <tr style={{ background: closingCash < -0.01 ? "#ecfdf5" : "#dcfce7" }}>
                           <td
                             style={{
                               padding: footerClosingPadding,
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 11 : 11.5,
-                              color: "#166534",
+                              color: closingCash < -0.01 ? "#059669" : "#166534",
                               lineHeight: 1.35,
                             }}
                           >
-                            Closing Jama Cash
+                            {closingCash < -0.01 ? "Closing Advance (Stock)" : closingCash > 0.01 ? "Closing Due Cash" : "Closing Cash"}
                           </td>
                           <td
                             style={{
@@ -662,11 +666,11 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               textAlign: "right",
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 11 : 11.5,
-                              color: "#166534",
+                              color: closingCash < -0.01 ? "#059669" : "#166534",
                               lineHeight: 1.35,
                             }}
                           >
-                            {closingCash.toFixed(2)}
+                            {closingCash < -0.01 ? `₹${Math.abs(closingCash).toFixed(2)} Adv` : closingCash > 0.01 ? `₹${closingCash.toFixed(2)} Due` : "₹0.00 (Cleared)"}
                           </td>
                         </tr>
                       </tbody>
@@ -719,7 +723,7 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               lineHeight: 1.35,
                             }}
                           >
-                            Previous Jama
+                            {prevFine < -0.0001 ? "Previous Advance (−)" : prevFine > 0.0001 ? "Previous Due (+)" : "Previous Balance"}
                           </td>
                           <td
                             style={{
@@ -728,11 +732,11 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               textAlign: "right",
                               fontSize: isPhoneSize ? 10.5 : 11,
                               fontWeight: 800,
-                              color: "#000000",
+                              color: prevFine < -0.0001 ? "#059669" : "#000000",
                               lineHeight: 1.35,
                             }}
                           >
-                            {prevFine > 0 ? prevFine.toFixed(3) : "0.000"} g
+                            {prevFine < -0.0001 ? `−${Math.abs(prevFine).toFixed(3)} g` : prevFine > 0.0001 ? `+${prevFine.toFixed(3)} g` : "0.000 g"}
                           </td>
                         </tr>
                         <tr>
@@ -816,17 +820,17 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                             {recvFine > 0 ? `−${recvFine.toFixed(3)}` : "0.000"} g
                           </td>
                         </tr>
-                        <tr style={{ background: "#fff3cd" }}>
+                        <tr style={{ background: closingFine < -0.0001 ? "#ecfdf5" : "#fff3cd" }}>
                           <td
                             style={{
                               padding: footerClosingPadding,
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 11.5 : 12,
-                              color: "#856404",
+                              color: closingFine < -0.0001 ? "#059669" : "#856404",
                               lineHeight: 1.35,
                             }}
                           >
-                            Closing Jama Gold
+                            {closingFine < -0.0001 ? "Closing Advance (Stock)" : closingFine > 0.0001 ? "Closing Due Gold" : "Closing Fine Gold"}
                           </td>
                           <td
                             style={{
@@ -834,11 +838,11 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                               textAlign: "right",
                               fontWeight: 900,
                               fontSize: isPhoneSize ? 12 : 13,
-                              color: "#856404",
+                              color: closingFine < -0.0001 ? "#059669" : "#856404",
                               lineHeight: 1.35,
                             }}
                           >
-                            {closingFine.toFixed(3)} g
+                            {closingFine < -0.0001 ? `${Math.abs(closingFine).toFixed(3)} g Adv` : closingFine > 0.0001 ? `${closingFine.toFixed(3)} g Due` : "0.000 g (Cleared)"}
                           </td>
                         </tr>
                       </tbody>

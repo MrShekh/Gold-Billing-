@@ -21,12 +21,30 @@ export async function GET(req: NextRequest) {
 
         let totalJamaGold = 0;
         let totalJamaCash = 0;
+        let totalAdvanceGold = 0;
+        let totalAdvanceCash = 0;
+        let advanceCustomerCount = 0;
+
         for (const b of balances) {
-            if (b.fineGoldBalance > 0) totalJamaGold += Number(b.fineGoldBalance);
-            if (b.cashBalance > 0) totalJamaCash += Number(b.cashBalance);
+            const g = Number(b.fineGoldBalance) || 0;
+            const c = Number(b.cashBalance) || 0;
+            if (g > 0.0001) totalJamaGold += g;
+            if (g < -0.0001) totalAdvanceGold += Math.abs(g);
+            if (c > 0.01) totalJamaCash += c;
+            if (c < -0.01) totalAdvanceCash += Math.abs(c);
+            if (g < -0.0001 || c < -0.01) advanceCustomerCount++;
         }
 
-        return NextResponse.json({ totalCustomers, totalBills, todayBills, totalJamaGold, totalJamaCash });
+        return NextResponse.json({
+            totalCustomers,
+            totalBills,
+            todayBills,
+            totalJamaGold,
+            totalJamaCash,
+            totalAdvanceGold,
+            totalAdvanceCash,
+            advanceCustomerCount,
+        });
     } catch (err) {
         console.error(err);
         return NextResponse.json({ error: "Failed" }, { status: 500 });
