@@ -4,6 +4,7 @@ import type { Bill, BillItem } from "@/lib/db";
 
 export interface BillBusiness {
   business_name?: string;
+  owner_name?: string;
   phone?: string;
   email?: string;
   address?: string;
@@ -342,6 +343,11 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
                 )}
               </div>
               <div style={{ height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)`, marginTop: ph ? 4 : 6 }} />
+              {business?.owner_name?.trim() && (
+                <div style={{ marginTop: ph ? 3 : 5, fontSize: ph ? 10 : 12.5, fontWeight: 600, color: MUTED, letterSpacing: 0.4 }}>
+                  Prop.: <span style={{ color: NAVY, fontWeight: 700, textTransform: "uppercase" }}>{business.owner_name.trim()}</span>
+                </div>
+              )}
             </div>
           </div>
 
