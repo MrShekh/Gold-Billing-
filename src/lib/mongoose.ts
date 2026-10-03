@@ -39,7 +39,13 @@ export async function connectDB(): Promise<typeof mongoose> {
         });
     }
 
-    cached.conn = await cached.promise;
+    try {
+        cached.conn = await cached.promise;
+    } catch (err) {
+        // Don't keep a rejected promise cached — allow a retry on the next request
+        cached.promise = null;
+        throw err;
+    }
 
     // Run userId migration once per process lifecycle
     if (!cached.migrated) {

@@ -384,6 +384,8 @@ export default function BillsPage() {
                 )}
               </div>
             ) : (
+              <>
+              <div className="desktop-table-view">
               <div className="table-responsive">
                 <table className="data-table">
                   <thead>
@@ -523,6 +525,52 @@ export default function BillsPage() {
                 </tbody>
                 </table>
               </div>
+              </div>{/* end desktop-table-view */}
+
+              {/* Mobile card list */}
+              <div className="mobile-card-list" style={{ padding: "12px" }}>
+                {filtered.map((b, i) => {
+                  const netFine = parseFloat(b.billTotalFine || "0");
+                  const custBal = customerBalances[b.customerId];
+                  const currentDue = custBal ? custBal.fine_gold_balance : null;
+                  return (
+                    <div key={b.id} className="mobile-list-card">
+                      <div className="mobile-card-top">
+                        <div>
+                          <div className="mobile-card-main">{b.customerName}</div>
+                          <div className="mobile-card-sub">{fmtDate(b.date)}</div>
+                        </div>
+                        <span className="mobile-card-badge">{b.voucherNo}</span>
+                      </div>
+                      <hr className="mobile-card-divider" />
+                      <div className="mobile-card-footer">
+                        <div className="mobile-card-info">
+                          <div className="mobile-card-info-row">
+                            <span style={{ color: "var(--text-muted)" }}>Fine:</span>
+                            <span style={{ fontWeight: 700, color: netFine >= 0 ? "var(--accent)" : "var(--success)", fontFamily: "monospace" }}>
+                              {netFine >= 0 ? `+${netFine.toFixed(3)}` : netFine.toFixed(3)} g
+                            </span>
+                          </div>
+                          {currentDue !== null && (
+                            <div className="mobile-card-info-row">
+                              <span style={{ color: "var(--text-muted)" }}>Status:</span>
+                              <span style={{ fontWeight: 600, fontSize: 11, color: currentDue < -0.0001 ? "#10b981" : currentDue <= 0.0001 ? "var(--success)" : "var(--accent)" }}>
+                                {currentDue < -0.0001 ? `Adv ${Math.abs(currentDue).toFixed(3)}g` : currentDue <= 0.0001 ? "✓ Clear" : `Owes ${currentDue.toFixed(3)}g`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mobile-card-actions">
+                          <Link href={`/bills/view?id=${b.id}`} className="btn btn-xs btn-secondary" title="View"><Eye size={13} /></Link>
+                          <Link href={`/bills/edit?id=${b.id}`} className="btn btn-xs btn-secondary" title="Edit" style={{ fontSize: 11 }}>Edit</Link>
+                          <button className="btn btn-xs btn-danger" onClick={() => setDeleteConfirm(b.id)} title="Delete"><Trash2 size={13} /></button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              </>
             )}
           </div>
         </div>

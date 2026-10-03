@@ -437,7 +437,8 @@ function EditBillContent() {
             </div>
           )}
 
-          {/* Paper Bill Wrapper */}
+          {/* ====== DESKTOP: Paper Bill Table ====== */}
+          <div className="desktop-bill-table">
           <div className="table-responsive" style={{ paddingBottom: 16 }}>
             <div
               style={{
@@ -1724,27 +1725,149 @@ function EditBillContent() {
               </table>
             </div>
           </div>
+          </div>{/* end desktop-bill-table */}
 
-          <div
-            className="flex-between"
-            style={{ marginTop: 20, paddingBottom: 40 }}
-          >
-            <button
-              className="btn btn-secondary"
-              onClick={() => router.push("/bills")}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={save}
-              disabled={saving}
-            >
-              <Save size={15} />
-              {saving ? "Saving…" : "Update Bill"}
-            </button>
+          {/* ====== MOBILE: Stacked Card Entry Form ====== */}
+          <div className="mobile-bill-form">
+            <div className="mobile-bill-header">
+              <div style={{ marginBottom: 8 }}>
+                <div className="mobile-bill-meta-label">Customer</div>
+                <select value={cid} onChange={e => onCustomerSelect(e.target.value)} className="mobile-bill-meta-input" style={{ color: cid ? "#000" : "#aaa" }}>
+                  <option value="">Select Customer ▾</option>
+                  {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              {!jamaLoading && cid && jamaBalance && (
+                <div style={{ padding: "8px 10px", borderRadius: 8, marginBottom: 8, background: (jamaBalance.fine_gold_balance ?? 0) < -0.0001 ? "#ecfdf5" : "#fff8e1", border: (jamaBalance.fine_gold_balance ?? 0) < -0.0001 ? "1px solid #10b981" : "1px solid #f59e0b" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: (jamaBalance.fine_gold_balance ?? 0) < -0.0001 ? "#065f46" : "#92400e", marginBottom: 4 }}>
+                    {(jamaBalance.fine_gold_balance ?? 0) < -0.0001 ? "⬇️ Advance in Stock" : "⚠️ Previous Due"}
+                  </div>
+                  <div style={{ display: "flex", gap: 16, fontSize: 13 }}>
+                    <span style={{ fontWeight: 700, color: (jamaBalance.fine_gold_balance ?? 0) < -0.0001 ? "#059669" : "#b45309" }}>🪙 {Math.abs(jamaBalance.fine_gold_balance ?? 0).toFixed(3)} g</span>
+                    <span style={{ fontWeight: 700, color: (jamaBalance.cash_balance ?? 0) < -0.01 ? "#059669" : "#b45309" }}>₹ {Math.abs(jamaBalance.cash_balance ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              )}
+              {jamaLoading && <div style={{ fontSize: 12, color: "#b8860b", padding: "4px 0" }}>Loading balance…</div>}
+              <div className="mobile-bill-header-row">
+                <div className="mobile-bill-meta-field">
+                  <span className="mobile-bill-meta-label">Voucher No</span>
+                  <input type="text" value={vno} onChange={e => setVno(e.target.value)} className="mobile-bill-meta-input" />
+                </div>
+                <div className="mobile-bill-meta-field">
+                  <span className="mobile-bill-meta-label">Date</span>
+                  <input type="date" value={date} onChange={e => setDate(e.target.value)} className="mobile-bill-meta-input" />
+                </div>
+                <div className="mobile-bill-meta-field">
+                  <span className="mobile-bill-meta-label">Time</span>
+                  <input type="time" value={time} onChange={e => setTime(e.target.value)} className="mobile-bill-meta-input" />
+                </div>
+              </div>
+            </div>
+
+            <div className="mobile-section-header">
+              <span className="mobile-section-title">📤 Issue</span>
+              <button type="button" className="mobile-add-item-btn" onClick={() => setIssue(p => [...p, makeItem("ISSUE")])}><PlusCircle size={13} /> Add Item</button>
+            </div>
+            {issue.map((item, idx) => (
+              <div key={item.id} className="mobile-item-card">
+                <div className="mobile-item-card-header"><span className="mobile-item-number">Issue #{idx + 1}</span><button type="button" className="mobile-delete-btn" onClick={() => setIssue(p => p.filter((_, i) => i !== idx))}><Trash2 size={12} /> Remove</button></div>
+                <div className="mobile-item-fields">
+                  <div className="mobile-item-field-full"><label className="mobile-field-label">Item Name *</label><input type="text" value={item.itemName} onChange={e => upI(idx, "itemName", e.target.value)} className="mobile-field-input" placeholder="e.g. Gold Chain" /></div>
+                  <div><label className="mobile-field-label">Amount (₹)</label><input type="number" inputMode="decimal" value={item.amount} onChange={e => upI(idx, "amount", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Pcs</label><input type="number" inputMode="numeric" value={item.pcs} onChange={e => upI(idx, "pcs", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Gross Weight</label><input type="number" inputMode="decimal" value={item.grossWeight} onChange={e => upI(idx, "grossWeight", e.target.value)} className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">AD Weight</label><input type="number" inputMode="decimal" value={item.adWeight} onChange={e => upI(idx, "adWeight", e.target.value)} className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">Less Weight</label><input type="number" inputMode="decimal" value={item.lessWeight} onChange={e => upI(idx, "lessWeight", e.target.value)} className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">Net Weight (auto)</label><input type="text" value={item.netWeight} readOnly className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">Tunch %</label><input type="number" inputMode="decimal" value={item.tunch} onChange={e => upI(idx, "tunch", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Rate</label><input type="number" inputMode="decimal" value={item.rate} onChange={e => upI(idx, "rate", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Fine Gold (auto)</label><input type="text" value={item.fineGold} readOnly className="mobile-field-input" placeholder="0.000" /></div>
+                  <div className="mobile-item-field-full"><label className="mobile-field-label">Description</label><input type="text" value={item.description} onChange={e => upI(idx, "description", e.target.value)} className="mobile-field-input" placeholder="Optional" /></div>
+                </div>
+              </div>
+            ))}
+            <div className="mobile-section-totals">
+              <div className="mobile-total-item"><span className="mobile-total-label">Gross</span><span className="mobile-total-value">{iG || "0.000"}</span></div>
+              <div className="mobile-total-item"><span className="mobile-total-label">Net</span><span className="mobile-total-value">{iN || "0.000"}</span></div>
+              <div className="mobile-total-item"><span className="mobile-total-label">Fine Gold</span><span className="mobile-total-value">{iF || "0.000"}</span></div>
+            </div>
+
+            <div className="mobile-section-header" style={{ background: "#fff0f0" }}>
+              <span className="mobile-section-title" style={{ color: "#c0392b" }}>📥 Receive</span>
+              <button type="button" className="mobile-add-item-btn" style={{ borderColor: "#e05a5a", color: "#e05a5a" }} onClick={() => setRecv(p => [...p, makeItem("RECEIVE")])}><PlusCircle size={13} /> Add Item</button>
+            </div>
+            {recv.map((item, idx) => (
+              <div key={item.id} className="mobile-item-card" style={{ borderColor: "#ffcdd2" }}>
+                <div className="mobile-item-card-header"><span className="mobile-item-number">Receive #{idx + 1}</span><button type="button" className="mobile-delete-btn" onClick={() => setRecv(p => p.filter((_, i) => i !== idx))}><Trash2 size={12} /> Remove</button></div>
+                <div className="mobile-item-fields">
+                  <div className="mobile-item-field-full"><label className="mobile-field-label">Item Name *</label><input type="text" value={item.itemName} onChange={e => upR(idx, "itemName", e.target.value)} className="mobile-field-input" placeholder="e.g. Gold Chain" /></div>
+                  <div><label className="mobile-field-label">Amount (₹)</label><input type="number" inputMode="decimal" value={item.amount} onChange={e => upR(idx, "amount", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Pcs</label><input type="number" inputMode="numeric" value={item.pcs} onChange={e => upR(idx, "pcs", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Gross Weight</label><input type="number" inputMode="decimal" value={item.grossWeight} onChange={e => upR(idx, "grossWeight", e.target.value)} className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">AD Weight</label><input type="number" inputMode="decimal" value={item.adWeight} onChange={e => upR(idx, "adWeight", e.target.value)} className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">Less Weight</label><input type="number" inputMode="decimal" value={item.lessWeight} onChange={e => upR(idx, "lessWeight", e.target.value)} className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">Net Weight (auto)</label><input type="text" value={item.netWeight} readOnly className="mobile-field-input" placeholder="0.000" /></div>
+                  <div><label className="mobile-field-label">Tunch %</label><input type="number" inputMode="decimal" value={item.tunch} onChange={e => upR(idx, "tunch", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Rate</label><input type="number" inputMode="decimal" value={item.rate} onChange={e => upR(idx, "rate", e.target.value)} className="mobile-field-input" placeholder="0" /></div>
+                  <div><label className="mobile-field-label">Fine Gold (auto)</label><input type="text" value={item.fineGold} readOnly className="mobile-field-input" placeholder="0.000" /></div>
+                  <div className="mobile-item-field-full"><label className="mobile-field-label">Description</label><input type="text" value={item.description} onChange={e => upR(idx, "description", e.target.value)} className="mobile-field-input" placeholder="Optional" /></div>
+                </div>
+              </div>
+            ))}
+            <div className="mobile-section-totals">
+              <div className="mobile-total-item"><span className="mobile-total-label">Gross</span><span className="mobile-total-value" style={{ color: "#c0392b" }}>{rG || "0.000"}</span></div>
+              <div className="mobile-total-item"><span className="mobile-total-label">Net</span><span className="mobile-total-value" style={{ color: "#c0392b" }}>{rN || "0.000"}</span></div>
+              <div className="mobile-total-item"><span className="mobile-total-label">Fine Gold</span><span className="mobile-total-value" style={{ color: "#c0392b" }}>{rF || "0.000"}</span></div>
+            </div>
+
+            <div className="mobile-grand-total">
+              <span className="mobile-grand-label">Bill Total</span>
+              <div style={{ display: "flex", gap: 20 }}>
+                <div className="mobile-total-item"><span className="mobile-total-label">Net Wt</span><span className="mobile-grand-val">{parseFloat(tN) < 0 ? `${Math.abs(parseFloat(tN)).toFixed(3)} R` : (tN || "0.000")}</span></div>
+                <div className="mobile-total-item"><span className="mobile-total-label">Fine Gold</span><span className="mobile-grand-val">{parseFloat(tF) < 0 ? `${Math.abs(parseFloat(tF)).toFixed(3)} R` : (tF || "0.000")}</span></div>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 80 }}>
+              <div className="mobile-jama-box">
+                <div className="mobile-jama-title">💰 Cash Jama</div>
+                <div className="mobile-jama-rows">
+                  <div className="mobile-jama-row"><span style={{ color: "#888", fontSize: 11 }}>Previous</span><span style={{ fontWeight: 700, color: prevJamaCash < 0 ? "#059669" : "#b45309" }}>{prevJamaCash < -0.01 ? `−₹${Math.abs(prevJamaCash).toFixed(2)}` : `+₹${prevJamaCash.toFixed(2)}`}</span></div>
+                  <div className="mobile-jama-row"><span style={{ color: "#888", fontSize: 11 }}>This Bill</span><span style={{ color: "#166534" }}>+₹{issueCashNum.toFixed(2)}</span></div>
+                  <div className="mobile-jama-row"><span style={{ color: "#888", fontSize: 11 }}>Received</span><span style={{ color: "#059669" }}>−₹{recvCashNum.toFixed(2)}</span></div>
+                  <div className="mobile-jama-row" style={{ background: closingJamaCash < -0.01 ? "#ecfdf5" : "#dcfce7", borderRadius: 6, padding: "6px 8px", marginTop: 4 }}>
+                    <span style={{ fontWeight: 800, fontSize: 12 }}>Closing</span>
+                    <span style={{ fontWeight: 900, fontSize: 13, color: closingJamaCash < -0.01 ? "#059669" : "#166534" }}>{closingJamaCash < -0.01 ? `₹${Math.abs(closingJamaCash).toFixed(2)} Adv` : closingJamaCash > 0.01 ? `₹${closingJamaCash.toFixed(2)} Due` : "₹0 Clear"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mobile-jama-box">
+                <div className="mobile-jama-title">🪙 Gold Jama</div>
+                <div className="mobile-jama-rows">
+                  <div className="mobile-jama-row"><span style={{ color: "#888", fontSize: 11 }}>Previous</span><span style={{ fontWeight: 700, color: prevJamaGold < 0 ? "#059669" : "#b45309" }}>{prevJamaGold < -0.0001 ? `−${Math.abs(prevJamaGold).toFixed(3)}g` : `+${prevJamaGold.toFixed(3)}g`}</span></div>
+                  <div className="mobile-jama-row"><span style={{ color: "#888", fontSize: 11 }}>This Bill</span><span style={{ color: "#b45309" }}>+{issueFineNum.toFixed(3)}g</span></div>
+                  <div className="mobile-jama-row"><span style={{ color: "#888", fontSize: 11 }}>Received</span><span style={{ color: "#059669" }}>−{recvFineNum.toFixed(3)}g</span></div>
+                  <div className="mobile-jama-row" style={{ background: closingJamaGold < -0.0001 ? "#ecfdf5" : "#fff3cd", borderRadius: 6, padding: "6px 8px", marginTop: 4 }}>
+                    <span style={{ fontWeight: 800, fontSize: 12 }}>Closing</span>
+                    <span style={{ fontWeight: 900, fontSize: 13, color: closingJamaGold < -0.0001 ? "#059669" : "#856404" }}>{closingJamaGold < -0.0001 ? `${Math.abs(closingJamaGold).toFixed(3)}g Adv` : closingJamaGold > 0.0001 ? `${closingJamaGold.toFixed(3)}g Due` : "0.000 Clear"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>{/* end mobile-bill-form */}
+
+          <div className="flex-between desktop-bill-table" style={{ marginTop: 20, paddingBottom: 40 }}>
+            <button className="btn btn-secondary" onClick={() => router.push("/bills")}>Cancel</button>
+            <button className="btn btn-primary" onClick={save} disabled={saving}><Save size={15} />{saving ? "Saving…" : "Update Bill"}</button>
           </div>
         </div>
+      </div>
+
+      {/* Mobile sticky save bar */}
+      <div className="mobile-save-bar">
+        <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => router.push("/bills")}>Cancel</button>
+        <button className="btn btn-primary" style={{ flex: 2 }} onClick={save} disabled={saving}><Save size={15} />{saving ? "Saving…" : "Update Bill"}</button>
       </div>
     </div>
   );

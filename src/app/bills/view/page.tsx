@@ -6,9 +6,11 @@ import BillPrint from "@/components/BillPrint";
 import {
   getBillById,
   getCustomerById,
+  getProfile,
   getCustomerBalance,
   type Bill,
   type CustomerBalance,
+  type Profile,
 } from "@/lib/db";
 import {
   ArrowLeft,
@@ -34,6 +36,10 @@ function BillDetailContent() {
     undefined
   );
   const [custBalance, setCustBalance] = useState<CustomerBalance | null>(null);
+  const [customerAddress, setCustomerAddress] = useState<string | undefined>(
+    undefined
+  );
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   // Default is ALWAYS desktop width
   const [viewMode, setViewMode] = useState<"desktop" | "phone">("desktop");
@@ -100,6 +106,7 @@ function BillDetailContent() {
         <head>
           <title>Bill — ${bill.voucherNo}</title>
           <style>
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             @page { size: auto; margin: 4mm; }
             body { margin: 0; padding: 10px; font-family: 'Consolas', 'Courier New', monospace; background: #fff; color: #000; display: flex; justify-content: center; }
             .print-btn-bar { margin-bottom: 12px; padding: 8px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 640px; }
@@ -143,6 +150,7 @@ function BillDetailContent() {
         <head>
           <title>Bill — ${bill.voucherNo}</title>
           <style>
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             body { margin: 0; padding: 20px; font-family: 'Consolas', 'Courier New', monospace; background: #fff; color: #000; }
             .print-btn-bar { margin-bottom: 16px; padding: 8px 12px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 6px; display: flex; align-items: center; }
             .print-btn-bar button { padding: 6px 16px; font-size: 13px; font-weight: bold; background: #b8860b; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
@@ -198,11 +206,16 @@ function BillDetailContent() {
           const found = await getBillById(id as string);
           setBill(found || null);
           if (found && found.customerId) {
-            const [customer, bal] = await Promise.all([
+            const [customer, bal, prof] = await Promise.all([
               getCustomerById(found.customerId),
               getCustomerBalance(found.customerId),
+              getProfile(),
             ]);
-            if (customer) setCustomerPhone(customer.phone);
+            if (customer) {
+              setCustomerPhone(customer.phone);
+              setCustomerAddress(customer.address);
+            }
+            setProfile(prof ?? null);
             setCustBalance(bal ?? null);
           }
         } catch (e) {
@@ -634,7 +647,9 @@ function BillDetailContent() {
             >
               <BillPrint
                 bill={bill}
-                companyName={bill.customerName.toUpperCase()}
+                business={profile}
+                customerPhone={customerPhone}
+                customerAddress={customerAddress}
                 isPhoneSize={viewMode === "phone"}
               />
             </div>
@@ -654,7 +669,9 @@ function BillDetailContent() {
           >
             <BillPrint
               bill={bill}
-              companyName={bill.customerName.toUpperCase()}
+              business={profile}
+              customerPhone={customerPhone}
+              customerAddress={customerAddress}
               isPhoneSize={true}
             />
           </div>

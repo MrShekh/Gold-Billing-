@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Users, FileText, PlusCircle, LogOut, Menu, Settings, Layers } from "lucide-react";
 import { useAuth } from "@/lib/AuthProvider";
+import BottomNav from "@/components/BottomNav";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -86,6 +87,7 @@ export default function Sidebar() {
           </button>
         </div>
       </aside>
+      <BottomNav />
     </>
   );
 }
