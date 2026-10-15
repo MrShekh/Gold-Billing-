@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import AuthGuard from "@/components/AuthGuard";
-import { Wallet, UserPlus, Phone, Trash2, Pencil, ArrowUpRight, ArrowDownLeft, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Wallet, UserPlus, Phone, Trash2, Pencil, Eraser, ArrowUpRight, ArrowDownLeft, CheckCircle2, ArrowLeft } from "lucide-react";
 
 interface Person { id: string; name: string; phone: string; balance: number; }
 interface Entry { id: string; type: "GIVEN" | "RECEIVED"; amount: number; note: string; isSettlement: boolean; date: string; }
@@ -93,6 +93,15 @@ export default function CashPage() {
     if (!confirm(`Delete ${p.name} and all their cash records?`)) return;
     try { await api(`/api/cash/${p.id}`, { method: "DELETE" }); loadPeople(); }
     catch (err) { setError((err as Error).message); }
+  }
+
+  async function clearPerson(p: { id: string; name: string; balance: number }) {
+    if (!confirm(`Clear all transactions of ${p.name}? Balance of ${fmt(p.balance)} will be reset to zero.`)) return;
+    try {
+      await api(`/api/cash/${p.id}?clear=1`, { method: "DELETE" });
+      if (detail?.id === p.id) await openPerson(p.id);
+      loadPeople();
+    } catch (err) { setError((err as Error).message); }
   }
 
   async function saveEdit(e: React.FormEvent) {
@@ -211,6 +220,10 @@ export default function CashPage() {
                                       onClick={(e) => { e.stopPropagation(); setError(""); setEditing({ id: p.id, name: p.name, phone: p.phone }); }}>
                                       <Pencil size={12} />
                                     </button>
+                                    <button className="btn btn-xs btn-secondary" title="Clear all transactions"
+                                      onClick={(e) => { e.stopPropagation(); clearPerson(p); }}>
+                                      <Eraser size={12} />
+                                    </button>
                                     <button className="btn btn-xs btn-secondary" title="Delete" style={{ color: RED }}
                                     onClick={(e) => { e.stopPropagation(); removeFromList(p); }}>
                                     <Trash2 size={12} />
@@ -250,6 +263,10 @@ export default function CashPage() {
                             <CheckCircle2 size={14} /> Settle
                           </button>
                         )}
+                        <button className="btn btn-secondary btn-sm" title="Clear all transactions"
+                          onClick={() => clearPerson(detail)} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          <Eraser size={14} /> Clear
+                        </button>
                         <button className="btn btn-secondary btn-sm" title="Edit"
                           onClick={() => { setError(""); setEditing({ id: detail.id, name: detail.name, phone: detail.phone }); }}>
                           <Pencil size={14} />

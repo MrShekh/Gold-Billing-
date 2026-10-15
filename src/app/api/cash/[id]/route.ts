@@ -111,6 +111,11 @@ export async function DELETE(req: NextRequest, context: Ctx) {
         await connectDB();
         const { id } = await context.params;
         const entryId = req.nextUrl.searchParams.get("entryId");
+        if (req.nextUrl.searchParams.get("clear")) {
+            // Wipe all transactions but keep the person
+            await CashEntryModel.deleteMany({ personId: id, userId });
+            return NextResponse.json({ success: true });
+        }
         if (entryId) {
             await CashEntryModel.deleteOne({ _id: entryId, personId: id, userId });
             return NextResponse.json({ success: true });
