@@ -51,6 +51,11 @@ function BillDetailContent() {
   const billContainerRef = useRef<HTMLDivElement>(null);
   const hiddenPhoneContainerRef = useRef<HTMLDivElement>(null);
 
+  // Phones open the bill in phone-width mode; desktop keeps the desktop default.
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 768px)").matches) setViewMode("phone");
+  }, []);
+
   // Download Phone Image (WhatsApp)
   const handleDownloadPhoneImage = async () => {
     setDownloadOpen(false);
@@ -71,10 +76,38 @@ function BillDetailContent() {
         useCORS: true,
         backgroundColor: "#ffffff",
       });
-      const link = document.createElement("a");
-      link.download = `Bill-${bill.voucherNo}-Phone.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      const filename = `Bill-${bill.voucherNo}-Phone.png`;
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png")
+      );
+      if (!blob) throw new Error("Image generation failed");
+
+      // On touch devices, offer the native share sheet (WhatsApp, Drive, ...) when supported.
+      const file = new File([blob], filename, { type: "image/png" });
+      const isTouch = window.matchMedia("(pointer: coarse)").matches;
+      let shared = false;
+      if (isTouch && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: `Bill ${bill.voucherNo}` });
+          shared = true;
+        } catch (shareErr) {
+          // User cancelled the sheet -> do nothing; other failures fall back to download.
+          if ((shareErr as DOMException)?.name === "AbortError") {
+            return;
+          }
+        }
+      }
+
+      if (!shared) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 3000);
     } catch (err) {
@@ -98,7 +131,10 @@ function BillDetailContent() {
     if (!targetElement) return;
 
     const printWindow = window.open("", "_blank", "width=700,height=850");
-    if (!printWindow) return;
+    if (!printWindow) {
+      alert("Pop-up was blocked. Please allow pop-ups for this site to print or save the PDF.");
+      return;
+    }
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -142,7 +178,10 @@ function BillDetailContent() {
     if (!printArea) return;
 
     const printWindow = window.open("", "_blank", "width=1100,height=800");
-    if (!printWindow) return;
+    if (!printWindow) {
+      alert("Pop-up was blocked. Please allow pop-ups for this site to print or save the PDF.");
+      return;
+    }
 
     printWindow.document.write(`
       <!DOCTYPE html>

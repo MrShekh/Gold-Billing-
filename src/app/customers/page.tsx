@@ -243,7 +243,7 @@ export default function CustomersPage() {
               </div>
             ) : (
               <div className="table-responsive">
-                <table className="data-table">
+                <table className="data-table stack-mobile">
                   <thead>
                     <tr>
                       <th>#</th>
@@ -259,8 +259,8 @@ export default function CustomersPage() {
                     {filtered.map((c, i) => (
                       <React.Fragment key={c.id}>
                         <tr>
-                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
-                          <td>
+                          <td data-label="#" style={{ color: "var(--text-muted)", fontSize: 13 }}>{i + 1}</td>
+                          <td data-label="Name">
                             <div style={{ fontWeight: 700, fontSize: 15 }}>
                               <Link
                                 href={`/customers/${c.id}`}
@@ -271,12 +271,12 @@ export default function CustomersPage() {
                               </Link>
                             </div>
                           </td>
-                          <td>
+                          <td data-label="Phone">
                             <div className="flex-center gap-2" style={{ color: "var(--text-secondary)", fontSize: 13 }}>
                               <Phone size={13} /> {c.phone}
                             </div>
                           </td>
-                          <td>
+                          <td data-label="Address">
                             {c.address ? (
                               <div className="flex-center gap-2" style={{ color: "var(--text-muted)", fontSize: 13 }}>
                                 <MapPin size={12} /> {c.address}
@@ -285,13 +285,13 @@ export default function CustomersPage() {
                               <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
                             )}
                           </td>
-                          <td>
+                          <td data-label="Bills">
                             <span className="badge badge-gold">
                               <FileText size={11} style={{ marginRight: 4 }} />
                               {getCustomerBillCount(c.id)} bill{getCustomerBillCount(c.id) !== 1 ? "s" : ""}
                             </span>
                           </td>
-                          <td>
+                          <td data-label="Jama Balance">
                             {balances[c.id] !== undefined ? (() => {
                               const bal = balances[c.id];
                               const gold = bal?.fine_gold_balance ?? 0;
@@ -322,7 +322,7 @@ export default function CustomersPage() {
                               <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
                             )}
                           </td>
-                          <td>
+                          <td data-label="Actions">
                             <div className="flex gap-2">
                               <Link
                                 href={`/customers/${c.id}`}
@@ -346,7 +346,7 @@ export default function CustomersPage() {
                         </tr>
                         {/* Payment panel row */}
                         {payPanelId === c.id && (
-                          <tr>
+                          <tr className="stack-row-full">
                             <td colSpan={7} style={{ background: "var(--bg-secondary)", padding: "16px 20px", borderBottom: "2px solid var(--accent)" }}>
                               <div style={{
                                 background: "var(--bg-card)", border: "1px solid var(--border)",

@@ -204,7 +204,7 @@ export default function DevAdminPage() {
                         )}
 
                         {/* Dashboard Grid */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+                        <div className="dev-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
 
                             {/* Left Column: Registered Users */}
                             <div style={{ background: "#11111a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 28, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}>

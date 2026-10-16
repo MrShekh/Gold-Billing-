@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/lib/AuthProvider";
 import { getProfile, updateProfile, Profile } from "@/lib/db";
 import { Save, LogOut, Download, HardDrive } from "lucide-react";
+import InstallApp from "@/components/InstallApp";
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
@@ -100,13 +101,16 @@ export default function ProfilePage() {
 
         <div className="page-content" style={{ maxWidth: "100%" }}>
 
+          {/* Install as app (Android prompt / iPhone instructions) */}
+          <InstallApp />
+
           {/* Business Profile */}
           <div className="form-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid var(--border)" }}>
             <h3 style={{ marginBottom: 16, borderBottom: "1px solid var(--border)", paddingBottom: 8 }}>Business Information</h3>
             <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>This information will be printed on your bills.</p>
 
             <form onSubmit={handleProfileSave}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+              <div className="profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
                 <div>
                   <label className="form-label">Business Name</label>
                   <input type="text" className="form-input" value={profile.business_name || ""} onChange={e => setProfile({ ...profile, business_name: e.target.value })} />

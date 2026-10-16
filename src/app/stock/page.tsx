@@ -300,7 +300,7 @@ export default function AdvanceStockPage() {
                 </div>
               ) : (
                 <div className="table-responsive">
-                  <table className="data-table">
+                  <table className="data-table stack-mobile">
                     <thead>
                       <tr>
                         <th>#</th>
@@ -320,8 +320,8 @@ export default function AdvanceStockPage() {
 
                         return (
                           <tr key={c.id}>
-                            <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{idx + 1}</td>
-                            <td>
+                            <td data-label="#" style={{ color: "var(--text-muted)", fontSize: 13 }}>{idx + 1}</td>
+                            <td data-label="Customer">
                               <Link
                                 href={`/customers/${c.id}`}
                                 style={{
@@ -340,7 +340,7 @@ export default function AdvanceStockPage() {
                                 </div>
                               )}
                             </td>
-                            <td>
+                            <td data-label="Phone">
                               <div
                                 className="flex-center gap-2"
                                 style={{ color: "var(--text-secondary)", fontSize: 13 }}
@@ -348,7 +348,7 @@ export default function AdvanceStockPage() {
                                 <Phone size={13} /> {c.phone}
                               </div>
                             </td>
-                            <td>
+                            <td data-label="Advance Gold">
                               {goldAdv > 0 ? (
                                 <span
                                   className="badge"
@@ -372,7 +372,7 @@ export default function AdvanceStockPage() {
                                 <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
                               )}
                             </td>
-                            <td>
+                            <td data-label="Advance Cash">
                               {cashAdv > 0 ? (
                                 <span
                                   className="badge"
@@ -395,12 +395,12 @@ export default function AdvanceStockPage() {
                                 <span style={{ color: "var(--text-muted)", fontSize: 12 }}>—</span>
                               )}
                             </td>
-                            <td>
+                            <td data-label="Bills">
                               <span className="badge badge-gold">
                                 {getCustomerBillCount(c.id)} bill{getCustomerBillCount(c.id) !== 1 ? "s" : ""}
                               </span>
                             </td>
-                            <td>
+                            <td data-label="Actions">
                               <div className="flex gap-2">
                                 <Link
                                   href={`/bills/new?customerId=${c.id}`}
