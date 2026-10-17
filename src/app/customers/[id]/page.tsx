@@ -545,6 +545,7 @@ export default function CustomerLedgerPage() {
                                       <th style={{ padding: "8px 12px", fontWeight: 700, textAlign: "right" }}>Gross Wt</th>
                                       <th style={{ padding: "8px 12px", fontWeight: 700, textAlign: "right" }}>Net Wt</th>
                                       <th style={{ padding: "8px 12px", fontWeight: 700, textAlign: "right" }}>Touch</th>
+                                      <th style={{ padding: "8px 12px", fontWeight: 700, textAlign: "right" }}>Rate</th>
                                       <th style={{ padding: "8px 12px", fontWeight: 700, textAlign: "right" }}>Fine Gold</th>
                                     </tr>
                                   </thead>
@@ -584,6 +585,9 @@ export default function CustomerLedgerPage() {
                                           <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 14, color: "var(--text-secondary)" }}>
                                             {item.tunch ? `${item.tunch}%` : "—"}
                                           </td>
+                                          <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 14, color: "var(--text-secondary)", fontFamily: "monospace" }}>
+                                            {item.rate ? `₹${parseFloat(item.rate).toLocaleString("en-IN")}` : "—"}
+                                          </td>
                                           <td
                                             style={{
                                               padding: "10px 12px",
@@ -606,7 +610,7 @@ export default function CustomerLedgerPage() {
                                         Prev: <strong style={{ color: "var(--text-primary)", fontFamily: "monospace" }}>{prevFine.toFixed(3)}g</strong> &nbsp;•&nbsp;
                                         Net Change: <strong style={{ color: netFine >= 0 ? "var(--accent)" : "var(--success)", fontFamily: "monospace" }}>{netFine >= 0 ? `+${netFine.toFixed(3)}` : netFine.toFixed(3)}g</strong>
                                       </td>
-                                      <td colSpan={4} style={{ padding: "12px 12px 6px", textAlign: "right", fontWeight: 700 }}>
+                                      <td colSpan={5} style={{ padding: "12px 12px 6px", textAlign: "right", fontWeight: 700 }}>
                                         Balance After Bill: <span style={{ color: "var(--accent)", fontFamily: "monospace", fontSize: 17, fontWeight: 800 }}>{closingFine.toFixed(3)} g</span>
                                         {currentGoldDue <= 0.0001 && (
                                           <span style={{ marginLeft: 8, fontSize: 13, color: "var(--success)", fontWeight: 700 }}>
@@ -655,10 +659,11 @@ export default function CustomerLedgerPage() {
                                           {isIssue ? "+" : "−"}{parseFloat(item.fineGold || "0").toFixed(3)} g
                                         </strong>
                                       </div>
-                                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-muted)" }}>
-                                        <span>Gross: {item.grossWeight ? `${parseFloat(item.grossWeight).toFixed(3)}g` : "—"}</span>
-                                        <span>Net: {item.netWeight ? `${parseFloat(item.netWeight).toFixed(3)}g` : "—"}</span>
-                                        <span>Touch: {item.tunch ? `${item.tunch}%` : "—"}</span>
+                                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-muted)", flexWrap: "wrap", gap: "4px 8px" }}>
+                                        <span>Gross: <strong style={{ color: "var(--text-primary)" }}>{item.grossWeight ? `${parseFloat(item.grossWeight).toFixed(3)}g` : "—"}</strong></span>
+                                        <span>Net: <strong style={{ color: "var(--text-primary)" }}>{item.netWeight ? `${parseFloat(item.netWeight).toFixed(3)}g` : "—"}</strong></span>
+                                        <span>Touch: <strong style={{ color: "var(--text-primary)" }}>{item.tunch ? `${item.tunch}%` : "—"}</strong></span>
+                                        <span>Rate: <strong style={{ color: "var(--text-primary)" }}>{item.rate ? `₹${parseFloat(item.rate).toLocaleString("en-IN")}` : "—"}</strong></span>
                                       </div>
                                     </div>
                                   );
