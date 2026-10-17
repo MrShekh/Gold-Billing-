@@ -201,20 +201,21 @@ export default function CashPage() {
                       <p>Add a person to start tracking cash given or received.</p>
                     </div>
                   ) : (
-                    <div className="table-responsive">
+                    <>
+                    <div className="table-responsive desktop-table-view">
                       <table className="data-table">
-                        <thead><tr><th>Name</th><th>Number</th><th>Balance</th><th></th></tr></thead>
+                        <thead><tr><th>Name</th><th>Number</th><th>Balance</th><th>Actions</th></tr></thead>
                         <tbody>
                           {people.map(p => {
                             const b = balanceText(p.balance);
                             return (
                               <tr key={p.id} style={{ cursor: "pointer" }} onClick={() => { setError(""); openPerson(p.id); }}>
-                                <td style={{ fontWeight: 800 }}>{p.name}</td>
-                                <td>
+                                <td data-label="Name" style={{ fontWeight: 800 }}>{p.name}</td>
+                                <td data-label="Number">
                                   {p.phone ? <span className="flex-center gap-2" style={{ fontSize: 13 }}><Phone size={13} /> {p.phone}</span> : "—"}
                                 </td>
-                                <td style={{ color: b.color, fontWeight: 700 }}>{b.text}</td>
-                                <td>
+                                <td data-label="Balance" style={{ color: b.color, fontWeight: 700 }}>{b.text}</td>
+                                <td data-label="Actions">
                                   <div style={{ display: "flex", gap: 6 }}>
                                     <button className="btn btn-xs btn-secondary" title="Edit"
                                       onClick={(e) => { e.stopPropagation(); setError(""); setEditing({ id: p.id, name: p.name, phone: p.phone }); }}>
@@ -236,6 +237,33 @@ export default function CashPage() {
                         </tbody>
                       </table>
                     </div>
+
+                    <div className="mobile-card-list" style={{ padding: 12 }}>
+                      {people.map(p => {
+                        const b = balanceText(p.balance);
+                        return (
+                          <div key={p.id} className="mobile-list-card">
+                            <div className="mobile-card-top" style={{ cursor: "pointer" }} onClick={() => { setError(""); openPerson(p.id); }}>
+                              <div style={{ minWidth: 0 }}>
+                                <div className="mobile-card-main">{p.name}</div>
+                                <div className="mobile-card-sub">
+                                  {p.phone ? <><Phone size={11} style={{ verticalAlign: "middle" }} /> {p.phone}</> : "No number"}
+                                </div>
+                              </div>
+                              <strong style={{ color: b.color, fontSize: 13, textAlign: "right" }}>{b.text}</strong>
+                            </div>
+                            <div className="mobile-action-row">
+                              <button className="btn btn-sm btn-primary" onClick={() => { setError(""); openPerson(p.id); }}>History</button>
+                              <button className="btn btn-sm btn-secondary" aria-label="Edit"
+                                onClick={() => { setError(""); setEditing({ id: p.id, name: p.name, phone: p.phone }); }}><Pencil size={14} /></button>
+                              <button className="btn btn-sm btn-secondary" aria-label="Clear all transactions" onClick={() => clearPerson(p)}><Eraser size={14} /></button>
+                              <button className="btn btn-sm btn-secondary" aria-label="Delete" style={{ color: RED }} onClick={() => removeFromList(p)}><Trash2 size={14} /></button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    </>
                   )}
                 </div>
               </>
@@ -309,18 +337,18 @@ export default function CashPage() {
                     <div className="empty-state" style={{ padding: 40 }}><p>No transactions yet.</p></div>
                   ) : (
                     <div className="table-responsive">
-                      <table className="data-table">
-                        <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th><th></th></tr></thead>
+                      <table className="data-table stack-mobile">
+                        <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th><th>Actions</th></tr></thead>
                         <tbody>
                           {detail.entries.map(en => (
                             <tr key={en.id}>
-                              <td>{new Date(en.date).toLocaleDateString("en-IN")}</td>
-                              <td style={{ color: en.type === "GIVEN" ? RED : GREEN, fontWeight: 700 }}>
+                              <td data-label="Date">{new Date(en.date).toLocaleDateString("en-IN")}</td>
+                              <td data-label="Type" style={{ color: en.type === "GIVEN" ? RED : GREEN, fontWeight: 700 }}>
                                 {en.isSettlement ? "Settlement · " : ""}{en.type === "GIVEN" ? "I gave" : "I received"}
                               </td>
-                              <td style={{ fontFamily: "monospace", fontWeight: 700 }}>{fmt(en.amount)}</td>
-                              <td style={{ color: "var(--text-secondary)" }}>{en.note || "—"}</td>
-                              <td>
+                              <td data-label="Amount" style={{ fontFamily: "monospace", fontWeight: 700 }}>{fmt(en.amount)}</td>
+                              <td data-label="Note" style={{ color: "var(--text-secondary)" }}>{en.note || "—"}</td>
+                              <td data-label="Actions">
                                 <button className="btn btn-xs btn-secondary" onClick={() => removeEntry(en.id)} style={{ color: RED }}>
                                   <Trash2 size={12} />
                                 </button>

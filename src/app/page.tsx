@@ -5,7 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import AuthGuard from "@/components/AuthGuard";
 import { getDashboardStats, getBills, getCustomers } from "@/lib/db";
 import type { Bill, Customer } from "@/lib/db";
-import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp, Layers } from "lucide-react";
+import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp, Layers, ChevronRight, Plus } from "lucide-react";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -56,141 +56,215 @@ export default function DashboardPage() {
       <div style={{ display: "flex" }}>
         <Sidebar />
         <div className="main-layout" style={{ flex: 1 }}>
-          <div className="page-header">
-            <h2>Dashboard</h2>
-            <p>Overview of your billing activity &amp; stock</p>
-          </div>
-          <div className="page-content">
-            {/* Stat Cards Row 1 */}
-            <div className="grid-3 mb-4">
-              <div className="stat-card">
-                <div className="flex-between mb-2"><span className="stat-label">Total Customers</span><div className="stat-icon"><Users size={18} /></div></div>
-                <div className="stat-value">{stats.totalCustomers}</div>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Registered accounts</p>
-              </div>
-              <div className="stat-card">
-                <div className="flex-between mb-2"><span className="stat-label">Total Bills</span><div className="stat-icon"><FileText size={18} /></div></div>
-                <div className="stat-value">{stats.totalBills}</div>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>All time created</p>
-              </div>
-              <div className="stat-card">
-                <div className="flex-between mb-2"><span className="stat-label">Today&apos;s Bills</span><div className="stat-icon"><CalendarDays size={18} /></div></div>
-                <div className="stat-value">{stats.todayBills}</div>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Created today</p>
-              </div>
+          {/* Desktop Dashboard (Desktop displays unchanged) */}
+          <div className="desktop-dashboard">
+            <div className="page-header">
+              <h2>Dashboard</h2>
+              <p>Overview of your billing activity &amp; stock</p>
             </div>
-
-            {/* Stat Cards Row 2: Outstanding Due vs Advance Stock */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 24 }}>
-              <div className="stat-card" style={{ borderColor: "rgba(212,168,67,0.3)" }}>
-                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Pending Gold Due</span><div className="stat-icon"><TrendingUp size={18} /></div></div>
-                <div className="stat-value" style={{ fontSize: 28 }}>{stats.totalJamaGold.toFixed(3)} g</div>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding to receive</p>
+            <div className="page-content">
+              {/* Stat Cards Row 1 */}
+              <div className="grid-3 mb-4">
+                <div className="stat-card">
+                  <div className="flex-between mb-2"><span className="stat-label">Total Customers</span><div className="stat-icon"><Users size={18} /></div></div>
+                  <div className="stat-value">{stats.totalCustomers}</div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Registered accounts</p>
+                </div>
+                <div className="stat-card">
+                  <div className="flex-between mb-2"><span className="stat-label">Total Bills</span><div className="stat-icon"><FileText size={18} /></div></div>
+                  <div className="stat-value">{stats.totalBills}</div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>All time created</p>
+                </div>
+                <div className="stat-card">
+                  <div className="flex-between mb-2"><span className="stat-label">Today&apos;s Bills</span><div className="stat-icon"><CalendarDays size={18} /></div></div>
+                  <div className="stat-value">{stats.todayBills}</div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Created today</p>
+                </div>
               </div>
 
-              <Link href="/stock" style={{ textDecoration: "none" }}>
-                <div className="stat-card" style={{
-                  background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
-                  borderColor: "rgba(16,185,129,0.35)",
-                  cursor: "pointer"
-                }}>
-                  <div className="flex-between mb-2">
-                    <span className="stat-label" style={{ color: "var(--success)" }}>Total Advance Gold Stock</span>
-                    <div className="stat-icon" style={{ color: "var(--success)", background: "rgba(16,185,129,0.15)", borderColor: "rgba(16,185,129,0.3)" }}>
-                      <TrendingUp size={18} />
+              {/* Stat Cards Row 2: Outstanding Due vs Advance Stock */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 24 }}>
+                <div className="stat-card" style={{ borderColor: "rgba(212,168,67,0.3)" }}>
+                  <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Pending Gold Due</span><div className="stat-icon"><TrendingUp size={18} /></div></div>
+                  <div className="stat-value" style={{ fontSize: 28 }}>{stats.totalJamaGold.toFixed(3)} g</div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding to receive</p>
+                </div>
+
+                <Link href="/stock" style={{ textDecoration: "none" }}>
+                  <div className="stat-card" style={{
+                    background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
+                    borderColor: "rgba(16,185,129,0.35)",
+                    cursor: "pointer"
+                  }}>
+                    <div className="flex-between mb-2">
+                      <span className="stat-label" style={{ color: "var(--success)" }}>Total Advance Gold Stock</span>
+                      <div className="stat-icon" style={{ color: "var(--success)", background: "rgba(16,185,129,0.15)", borderColor: "rgba(16,185,129,0.3)" }}>
+                        <TrendingUp size={18} />
+                      </div>
                     </div>
+                    <div className="stat-value" style={{ fontSize: 28, color: "var(--success)" }}>
+                      {(stats.totalAdvanceGold || 0).toFixed(3)} g
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                      Held from customers &nbsp;•&nbsp; View Stock <ArrowRight size={11} />
+                    </p>
                   </div>
-                  <div className="stat-value" style={{ fontSize: 28, color: "var(--success)" }}>
-                    {(stats.totalAdvanceGold || 0).toFixed(3)} g
-                  </div>
-                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                    Held from customers &nbsp;•&nbsp; View Stock <ArrowRight size={11} />
-                  </p>
-                </div>
-              </Link>
+                </Link>
 
-              <div className="stat-card" style={{ borderColor: "rgba(212,168,67,0.3)" }}>
-                <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Pending Cash Due</span><div className="stat-icon" style={{ color: "var(--accent)" }}>₹</div></div>
-                <div className="stat-value" style={{ fontSize: 28 }}>₹{stats.totalJamaCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
-                <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding to receive</p>
+                <div className="stat-card" style={{ borderColor: "rgba(212,168,67,0.3)" }}>
+                  <div className="flex-between mb-2"><span className="stat-label" style={{ color: "var(--accent)" }}>Pending Cash Due</span><div className="stat-icon" style={{ color: "var(--accent)" }}>₹</div></div>
+                  <div className="stat-value" style={{ fontSize: 28 }}>₹{stats.totalJamaCash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>Outstanding to receive</p>
+                </div>
+
+                <Link href="/stock" style={{ textDecoration: "none" }}>
+                  <div className="stat-card" style={{
+                    background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
+                    borderColor: "rgba(16,185,129,0.35)",
+                    cursor: "pointer"
+                  }}>
+                    <div className="flex-between mb-2">
+                      <span className="stat-label" style={{ color: "var(--success)" }}>Total Advance Cash</span>
+                      <div className="stat-icon" style={{ color: "var(--success)", background: "rgba(16,185,129,0.15)", borderColor: "rgba(16,185,129,0.3)" }}>₹</div>
+                    </div>
+                    <div className="stat-value" style={{ fontSize: 28, color: "var(--success)" }}>
+                      ₹{(stats.totalAdvanceCash || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                      Customer cash advance &nbsp;•&nbsp; View Stock <ArrowRight size={11} />
+                    </p>
+                  </div>
+                </Link>
               </div>
 
-              <Link href="/stock" style={{ textDecoration: "none" }}>
-                <div className="stat-card" style={{
-                  background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))",
-                  borderColor: "rgba(16,185,129,0.35)",
-                  cursor: "pointer"
-                }}>
-                  <div className="flex-between mb-2">
-                    <span className="stat-label" style={{ color: "var(--success)" }}>Total Advance Cash</span>
-                    <div className="stat-icon" style={{ color: "var(--success)", background: "rgba(16,185,129,0.15)", borderColor: "rgba(16,185,129,0.3)" }}>₹</div>
-                  </div>
-                  <div className="stat-value" style={{ fontSize: 28, color: "var(--success)" }}>
-                    ₹{(stats.totalAdvanceCash || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                  </div>
-                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                    Customer cash advance &nbsp;•&nbsp; View Stock <ArrowRight size={11} />
-                  </p>
+              {/* Quick Actions */}
+              <div style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 14, padding: "20px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>⚜ Quick Actions</h3>
+                  <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>Get started quickly</p>
                 </div>
-              </Link>
-            </div>
+                <div className="flex gap-3">
+                  <Link href="/customers" className="btn btn-secondary btn-sm"><Users size={14} /> Add Customer</Link>
+                  <Link href="/bills/new" className="btn btn-primary btn-sm"><PlusCircle size={14} /> Create Bill</Link>
+                  <Link href="/stock" className="btn btn-secondary btn-sm"><Layers size={14} /> Advance Stock</Link>
+                </div>
+              </div>
 
-            {/* Quick Actions */}
-            <div style={{ background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(212,168,67,0.03))", border: "1px solid rgba(212,168,67,0.3)", borderRadius: 14, padding: "20px 24px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              {/* Recent Sections */}
+              <div className="grid-2" style={{ gap: 20 }}>
+                <div className="form-card" style={{ padding: 0, overflow: "hidden" }}>
+                  <div className="flex-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
+                    <div className="flex-center gap-2"><FileText size={16} style={{ color: "var(--accent)" }} /><span style={{ fontWeight: 700, fontSize: 15 }}>Recent Bills</span></div>
+                    <Link href="/bills" className="btn btn-xs btn-secondary" style={{ display: "flex", alignItems: "center", gap: 4 }}>View All <ArrowRight size={12} /></Link>
+                  </div>
+                  {recentBills.length === 0 ? (
+                    <div className="empty-state" style={{ padding: 32 }}><TrendingUp /><h3>No bills yet</h3><p>Create your first bill</p></div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="data-table"><thead><tr><th>Voucher</th><th>Customer</th><th>Date</th></tr></thead>
+                        <tbody>{recentBills.map(b => (
+                          <tr key={b.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/bills/view?id=${b.id}`)}>
+                            <td><span className="badge badge-gold">{b.voucherNo}</span></td>
+                            <td style={{ fontWeight: 600 }}>{b.customerName}</td>
+                            <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{fmtDate(b.date)}</td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+                <div className="form-card" style={{ padding: 0, overflow: "hidden" }}>
+                  <div className="flex-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
+                    <div className="flex-center gap-2"><Users size={16} style={{ color: "var(--accent)" }} /><span style={{ fontWeight: 700, fontSize: 15 }}>Recent Customers</span></div>
+                    <Link href="/customers" className="btn btn-xs btn-secondary" style={{ display: "flex", alignItems: "center", gap: 4 }}>View All <ArrowRight size={12} /></Link>
+                  </div>
+                  {recentCustomers.length === 0 ? (
+                    <div className="empty-state" style={{ padding: 32 }}><Users /><h3>No customers yet</h3><p>Add your first customer</p></div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="data-table"><thead><tr><th>Name</th><th>Phone</th></tr></thead>
+                        <tbody>{recentCustomers.map(c => (
+                          <tr key={c.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/customers`)}>
+                            <td style={{ fontWeight: 600 }}>{c.name}</td>
+                            <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.phone}</td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Dashboard (Phone screens <=768px, matching Screenshot 1) */}
+          <div className="mobile-dashboard" style={{ padding: "14px 16px" }}>
+            <div className="mobile-dash-header">
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--accent)" }}>⚜ Quick Actions</h3>
-                <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>Get started quickly</p>
+                <h2 className="mobile-dash-title">Dashboard</h2>
+                <p className="mobile-dash-sub">Overview of billing &amp; stock</p>
               </div>
-              <div className="flex gap-3">
-                <Link href="/customers" className="btn btn-secondary btn-sm"><Users size={14} /> Add Customer</Link>
-                <Link href="/bills/new" className="btn btn-primary btn-sm"><PlusCircle size={14} /> Create Bill</Link>
-                <Link href="/stock" className="btn btn-secondary btn-sm"><Layers size={14} /> Advance Stock</Link>
+              <Link href="/bills/new" className="mobile-dash-add-btn" aria-label="Create New Bill">
+                <Plus size={22} />
+              </Link>
+            </div>
+
+            {/* 2x2 Metric Grid */}
+            <div className="mobile-dash-metrics">
+              <div className="mobile-dash-card">
+                <span className="mobile-dash-metric-label">CUSTOMERS</span>
+                <span className="mobile-dash-metric-val">{stats.totalCustomers}</span>
+              </div>
+              <div className="mobile-dash-card">
+                <span className="mobile-dash-metric-label">TOTAL BILLS</span>
+                <span className="mobile-dash-metric-val">{stats.totalBills}</span>
+              </div>
+              <div className="mobile-dash-card">
+                <span className="mobile-dash-metric-label">TODAY&apos;S BILLS</span>
+                <span className="mobile-dash-metric-val">{stats.todayBills}</span>
+              </div>
+              <div className="mobile-dash-card">
+                <span className="mobile-dash-metric-label">ADVANCE ACCOUNTS</span>
+                <span className="mobile-dash-metric-val">{stats.advanceCustomerCount ?? 0}</span>
               </div>
             </div>
 
-            {/* Recent Sections */}
-            <div className="grid-2" style={{ gap: 20 }}>
-              <div className="form-card" style={{ padding: 0, overflow: "hidden" }}>
-                <div className="flex-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
-                  <div className="flex-center gap-2"><FileText size={16} style={{ color: "var(--accent)" }} /><span style={{ fontWeight: 700, fontSize: 15 }}>Recent Bills</span></div>
-                  <Link href="/bills" className="btn btn-xs btn-secondary" style={{ display: "flex", alignItems: "center", gap: 4 }}>View All <ArrowRight size={12} /></Link>
-                </div>
-                {recentBills.length === 0 ? (
-                  <div className="empty-state" style={{ padding: 32 }}><TrendingUp /><h3>No bills yet</h3><p>Create your first bill</p></div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="data-table"><thead><tr><th>Voucher</th><th>Customer</th><th>Date</th></tr></thead>
-                      <tbody>{recentBills.map(b => (
-                        <tr key={b.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/bills/view?id=${b.id}`)}>
-                          <td><span className="badge badge-gold">{b.voucherNo}</span></td>
-                          <td style={{ fontWeight: 600 }}>{b.customerName}</td>
-                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{fmtDate(b.date)}</td>
-                        </tr>
-                      ))}</tbody>
-                    </table>
-                  </div>
-                )}
+            {/* Gold Balance Card */}
+            <div className="mobile-dash-balance-card">
+              <div className="mobile-dash-balance-section">
+                <span className="mobile-dash-metric-label">PENDING GOLD DUE</span>
+                <span className="mobile-dash-gold-due">{(stats.totalJamaGold || 0).toFixed(3)} g</span>
               </div>
-              <div className="form-card" style={{ padding: 0, overflow: "hidden" }}>
-                <div className="flex-between" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)" }}>
-                  <div className="flex-center gap-2"><Users size={16} style={{ color: "var(--accent)" }} /><span style={{ fontWeight: 700, fontSize: 15 }}>Recent Customers</span></div>
-                  <Link href="/customers" className="btn btn-xs btn-secondary" style={{ display: "flex", alignItems: "center", gap: 4 }}>View All <ArrowRight size={12} /></Link>
-                </div>
-                {recentCustomers.length === 0 ? (
-                  <div className="empty-state" style={{ padding: 32 }}><Users /><h3>No customers yet</h3><p>Add your first customer</p></div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="data-table"><thead><tr><th>Name</th><th>Phone</th></tr></thead>
-                      <tbody>{recentCustomers.map(c => (
-                        <tr key={c.id} style={{ cursor: "pointer" }} onClick={() => (window.location.href = `/customers`)}>
-                          <td style={{ fontWeight: 600 }}>{c.name}</td>
-                          <td style={{ color: "var(--text-muted)", fontSize: 13 }}>{c.phone}</td>
-                        </tr>
-                      ))}</tbody>
-                    </table>
-                  </div>
-                )}
+              <div className="mobile-dash-balance-divider" />
+              <div className="mobile-dash-balance-section">
+                <span className="mobile-dash-metric-label">ADVANCE GOLD STOCK</span>
+                <span className="mobile-dash-gold-adv">{(stats.totalAdvanceGold || 0).toFixed(3)} g</span>
               </div>
+            </div>
+
+            {/* Recent Bills Card */}
+            <div className="mobile-dash-recent-card">
+              <div className="mobile-dash-recent-head">
+                <h3>Recent Bills</h3>
+                <Link href="/bills" className="mobile-dash-view-all">View All →</Link>
+              </div>
+              {recentBills.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "16px", color: "var(--text-muted)", fontSize: 13 }}>
+                  No bills created yet
+                </div>
+              ) : (
+                <div className="mobile-dash-recent-list">
+                  {recentBills.slice(0, 5).map(b => (
+                    <Link key={b.id} href={`/bills/view?id=${b.id}`} className="mobile-dash-recent-item">
+                      <div className="mobile-dash-recent-info">
+                        <span className="mobile-dash-voucher-badge">{b.voucherNo}</span>
+                        <span className="mobile-dash-customer-name">{b.customerName}</span>
+                      </div>
+                      <ChevronRight size={18} className="mobile-dash-chevron" />
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

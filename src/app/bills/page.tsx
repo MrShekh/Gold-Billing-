@@ -215,8 +215,8 @@ export default function BillsPage() {
               )}
             </div>
 
-            {/* Filter Dropdown Trigger */}
-            <div style={{ position: "relative" }}>
+            {/* Filter Dropdown Trigger (Desktop) + Mobile Select */}
+            <div className="desktop-filter-btn" style={{ position: "relative" }}>
               <button
                 className={`btn ${isFiltered ? "btn-filter-active" : "btn-secondary"}`}
                 onClick={() => setFilterOpen((o) => !o)}
@@ -527,44 +527,73 @@ export default function BillsPage() {
               </div>
               </div>{/* end desktop-table-view */}
 
-              {/* Mobile card list */}
+              {/* Mobile card list (Prompt Section 8 specification) */}
               <div className="mobile-card-list" style={{ padding: "12px" }}>
-                {filtered.map((b, i) => {
+                {filtered.map((b) => {
                   const netFine = parseFloat(b.billTotalFine || "0");
                   const custBal = customerBalances[b.customerId];
                   const currentDue = custBal ? custBal.fine_gold_balance : null;
                   return (
                     <div key={b.id} className="mobile-list-card">
-                      <div className="mobile-card-top">
-                        <div>
-                          <div className="mobile-card-main">{b.customerName}</div>
-                          <div className="mobile-card-sub">{fmtDate(b.date)}</div>
-                        </div>
-                        <span className="mobile-card-badge">{b.voucherNo}</span>
+                      {/* Top row: Voucher number and date */}
+                      <div className="mobile-card-top" style={{ alignItems: "center", marginBottom: 6 }}>
+                        <span className="mobile-card-badge" style={{ fontSize: 12, fontWeight: 800 }}>{b.voucherNo}</span>
+                        <span className="mobile-card-sub" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <Calendar size={12} /> {fmtDate(b.date)}
+                        </span>
                       </div>
-                      <hr className="mobile-card-divider" />
-                      <div className="mobile-card-footer">
-                        <div className="mobile-card-info">
-                          <div className="mobile-card-info-row">
-                            <span style={{ color: "var(--text-muted)" }}>Fine:</span>
-                            <span style={{ fontWeight: 700, color: netFine >= 0 ? "var(--accent)" : "var(--success)", fontFamily: "monospace" }}>
+
+                      {/* Middle: Customer name, This Bill Net gold, ISSUE/RECEIVE counts */}
+                      <div style={{ margin: "6px 0 8px" }}>
+                        <Link
+                          href={`/customers/${b.customerId}`}
+                          className="mobile-card-main"
+                          style={{ textDecoration: "none", display: "inline-block", fontSize: 15 }}
+                        >
+                          {b.customerName}
+                        </Link>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+                          <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                            Net:{" "}
+                            <strong style={{ fontWeight: 800, color: netFine >= 0 ? "var(--accent)" : "var(--success)", fontFamily: "monospace" }}>
                               {netFine >= 0 ? `+${netFine.toFixed(3)}` : netFine.toFixed(3)} g
-                            </span>
+                            </strong>
                           </div>
-                          {currentDue !== null && (
-                            <div className="mobile-card-info-row">
-                              <span style={{ color: "var(--text-muted)" }}>Status:</span>
-                              <span style={{ fontWeight: 600, fontSize: 11, color: currentDue < -0.0001 ? "#10b981" : currentDue <= 0.0001 ? "var(--success)" : "var(--accent)" }}>
-                                {currentDue < -0.0001 ? `Adv ${Math.abs(currentDue).toFixed(3)}g` : currentDue <= 0.0001 ? "✓ Clear" : `Owes ${currentDue.toFixed(3)}g`}
-                              </span>
-                            </div>
-                          )}
+                          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
+                            {getBillSummary(b)}
+                          </div>
                         </div>
-                        <div className="mobile-card-actions">
-                          <Link href={`/bills/view?id=${b.id}`} className="btn btn-xs btn-secondary" title="View"><Eye size={13} /></Link>
-                          <Link href={`/bills/edit?id=${b.id}`} className="btn btn-xs btn-secondary" title="Edit" style={{ fontSize: 11 }}>Edit</Link>
-                          <button className="btn btn-xs btn-danger" onClick={() => setDeleteConfirm(b.id)} title="Delete"><Trash2 size={13} /></button>
+                      </div>
+
+                      {/* Bottom: Balance after bill, Customer Due/Advance status */}
+                      <div className="mobile-balance-grid" style={{ margin: "8px 0" }}>
+                        <div>
+                          <span>Balance After Bill</span>
+                          {b.closingFineGold !== undefined && b.closingFineGold !== null ? (() => {
+                            const cVal = parseFloat((b.closingFineGold as string) || "0");
+                            return (
+                              <strong style={{ color: cVal < -0.0001 ? "var(--success)" : "var(--text-primary)" }}>
+                                {cVal < -0.0001 ? `${Math.abs(cVal).toFixed(3)} g (Adv)` : `${cVal.toFixed(3)} g`}
+                              </strong>
+                            );
+                          })() : <strong>—</strong>}
                         </div>
+                        <div>
+                          <span>Customer Status</span>
+                          {currentDue !== null ? (
+                            <strong style={{ color: currentDue < -0.0001 ? "var(--success)" : currentDue <= 0.0001 ? "var(--success)" : "var(--accent)" }}>
+                              {currentDue < -0.0001 ? `Adv ${Math.abs(currentDue).toFixed(3)}g` : currentDue <= 0.0001 ? "✓ Clear" : `Owes ${currentDue.toFixed(3)}g`}
+                            </strong>
+                          ) : <strong>—</strong>}
+                        </div>
+                      </div>
+
+                      {/* Actions: View, Print, Edit, Delete */}
+                      <div className="mobile-action-row" style={{ justifyContent: "flex-end", marginTop: 8 }}>
+                        <Link href={`/bills/view?id=${b.id}`} className="btn btn-xs btn-secondary" title="View"><Eye size={13} /> View</Link>
+                        <Link href={`/bills/view?id=${b.id}`} className="btn btn-xs btn-secondary" title="Print"><Printer size={13} /> Print</Link>
+                        <Link href={`/bills/edit?id=${b.id}`} className="btn btn-xs btn-secondary" title="Edit">Edit</Link>
+                        <button className="btn btn-xs btn-danger" onClick={() => setDeleteConfirm(b.id)} title="Delete"><Trash2 size={13} /></button>
                       </div>
                     </div>
                   );

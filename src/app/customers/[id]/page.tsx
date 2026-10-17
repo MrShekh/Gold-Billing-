@@ -149,9 +149,9 @@ export default function CustomerLedgerPage() {
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar />
       <div className="main-layout" style={{ flex: 1, width: "100%" }}>
-        {/* Full-width Top Header */}
-        <div className="page-header" style={{ borderBottom: "1px solid var(--border)", padding: "20px 32px" }}>
-          <div className="flex-between" style={{ flexWrap: "wrap", gap: 16 }}>
+        {/* Top Header */}
+        <div className="page-header ledger-header" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div className="flex-between ledger-header-wrap" style={{ flexWrap: "wrap", gap: 16 }}>
             <div className="flex items-center gap-3">
               <Link
                 href="/customers"
@@ -161,30 +161,16 @@ export default function CustomerLedgerPage() {
                 <ArrowLeft size={16} /> Back
               </Link>
               <div>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "var(--text-primary)" }}>
+                <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}>
                   {customer ? customer.name : "Customer"}
-                  <span style={{ fontSize: 16, fontWeight: 500, color: "var(--text-muted)", marginLeft: 10 }}>
-                    Account Statement &amp; Ledger
-                  </span>
                 </h1>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 500, color: "var(--text-muted)" }}>
+                  Account Statement &amp; Ledger
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                className="btn btn-secondary"
-                onClick={() => window.print()}
-                style={{ padding: "8px 16px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <Printer size={15} /> Print Ledger
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={() => setPayModalOpen(true)}
-                style={{ padding: "8px 16px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
-              >
-                <Scale size={15} /> Settle / Payment
-              </button>
+            <div className="flex items-center gap-3 ledger-action-btns" style={{ flexWrap: "wrap" }}>
               {customerId && (
                 <Link
                   href={`/bills/new?customerId=${customerId}`}
@@ -194,6 +180,20 @@ export default function CustomerLedgerPage() {
                   <PlusCircle size={15} /> New Bill
                 </Link>
               )}
+              <button
+                className="btn btn-secondary"
+                onClick={() => setPayModalOpen(true)}
+                style={{ padding: "8px 16px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <Scale size={15} /> Settle / Payment
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={() => window.print()}
+                style={{ padding: "8px 16px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <Printer size={15} /> Print Ledger
+              </button>
             </div>
           </div>
         </div>
@@ -448,9 +448,9 @@ export default function CustomerLedgerPage() {
                           </div>
 
                           {/* Right: Clean summary values & actions */}
-                          <div className="flex items-center gap-5">
+                          <div className="flex items-center gap-3" style={{ flexWrap: "wrap" }}>
                             {/* Summary numbers strip */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 14 }}>
+                            <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10, fontSize: 13 }}>
                               <span style={{ color: "var(--text-muted)" }}>
                                 Prev: <strong style={{
                                   color: prevFine < -0.0001 ? "var(--success)" : "var(--text-primary)",
@@ -522,13 +522,15 @@ export default function CustomerLedgerPage() {
 
                         {/* Collapsible Clean Item Breakdown */}
                         {isExpanded && (
-                          <div style={{ padding: "16px 22px" }}>
+                          <div style={{ padding: "16px 22px" }} className="ledger-card-body">
                             {allItems.length === 0 ? (
                               <div style={{ fontSize: 14, color: "var(--text-muted)", fontStyle: "italic", padding: "8px 0" }}>
                                 No item details in this bill.
                               </div>
                             ) : (
-                              <div style={{ overflowX: "auto" }}>
+                              <>
+                              {/* Desktop table view */}
+                              <div className="table-responsive desktop-table-view">
                                 <table
                                   style={{
                                     width: "100%",
@@ -616,6 +618,77 @@ export default function CustomerLedgerPage() {
                                   </tfoot>
                                 </table>
                               </div>
+
+                              {/* Mobile items view */}
+                              <div className="mobile-card-list">
+                                {allItems.map((item, idx) => {
+                                  const isIssue = item.type === "ISSUE";
+                                  return (
+                                    <div key={idx} style={{
+                                      padding: "10px 12px",
+                                      background: "var(--bg-secondary)",
+                                      borderRadius: 8,
+                                      border: "1px solid var(--border)",
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 6
+                                    }}>
+                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                          <span style={{
+                                            fontSize: 10,
+                                            fontWeight: 800,
+                                            padding: "2px 6px",
+                                            borderRadius: 4,
+                                            background: isIssue ? "rgba(184,134,11,0.15)" : "rgba(16,185,129,0.15)",
+                                            color: isIssue ? "var(--accent)" : "var(--success)",
+                                          }}>
+                                            {isIssue ? "ISSUE" : "RECEIVE"}
+                                          </span>
+                                          <strong style={{ fontSize: 13 }}>{item.itemName}</strong>
+                                        </div>
+                                        <strong style={{
+                                          fontFamily: "monospace",
+                                          color: isIssue ? "var(--accent)" : "var(--success)",
+                                          fontSize: 13
+                                        }}>
+                                          {isIssue ? "+" : "−"}{parseFloat(item.fineGold || "0").toFixed(3)} g
+                                        </strong>
+                                      </div>
+                                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text-muted)" }}>
+                                        <span>Gross: {item.grossWeight ? `${parseFloat(item.grossWeight).toFixed(3)}g` : "—"}</span>
+                                        <span>Net: {item.netWeight ? `${parseFloat(item.netWeight).toFixed(3)}g` : "—"}</span>
+                                        <span>Touch: {item.tunch ? `${item.tunch}%` : "—"}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+
+                                <div style={{
+                                  padding: "8px 10px",
+                                  background: "var(--bg-card)",
+                                  border: "1px solid var(--border)",
+                                  borderRadius: 8,
+                                  fontSize: 12,
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 4
+                                }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                    <span style={{ color: "var(--text-muted)" }}>Net Change:</span>
+                                    <strong style={{ color: netFine >= 0 ? "var(--accent)" : "var(--success)", fontFamily: "monospace" }}>
+                                      {netFine >= 0 ? `+${netFine.toFixed(3)}` : netFine.toFixed(3)} g
+                                    </strong>
+                                  </div>
+                                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                    <span style={{ color: "var(--text-muted)" }}>Balance After Bill:</span>
+                                    <strong style={{ color: closingFine < -0.0001 ? "var(--success)" : "var(--accent)", fontFamily: "monospace" }}>
+                                      {closingFine < -0.0001 ? `${Math.abs(closingFine).toFixed(3)} g (Adv)` : `${closingFine.toFixed(3)} g`}
+                                    </strong>
+                                  </div>
+                                </div>
+                              </div>
+                              </>
                             )}
                           </div>
                         )}

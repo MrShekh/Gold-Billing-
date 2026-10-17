@@ -105,7 +105,7 @@ export default function ProfilePage() {
           <InstallApp />
 
           {/* Business Profile */}
-          <div className="form-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid var(--border)" }}>
+          <div className="form-card settings-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid var(--border)" }}>
             <h3 style={{ marginBottom: 16, borderBottom: "1px solid var(--border)", paddingBottom: 8 }}>Business Information</h3>
             <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>This information will be printed on your bills.</p>
 
@@ -150,10 +150,10 @@ export default function ProfilePage() {
           </div>
 
           {/* Theme Settings */}
-          <div className="form-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid var(--border)" }}>
+          <div className="form-card settings-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid var(--border)" }}>
             <h3 style={{ marginBottom: 16, borderBottom: "1px solid var(--border)", paddingBottom: 8 }}>Theme Settings</h3>
             <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16 }}>Choose your preferred interface theme.</p>
-            <div style={{ display: "flex", gap: 12 }}>
+            <div className="settings-theme-row" style={{ display: "flex", gap: 12 }}>
               <button
                 type="button"
                 className={`btn ${theme === "light" ? "btn-primary" : "btn-secondary"}`}
@@ -174,7 +174,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Local Backup */}
-          <div className="form-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid rgba(212,168,67,0.3)" }}>
+          <div className="form-card settings-card mb-4" style={{ padding: 24, background: "var(--bg-secondary)", borderRadius: 12, border: "1px solid rgba(212,168,67,0.3)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
               <HardDrive size={18} color="var(--accent)" />
               <h3 style={{ margin: 0, color: "var(--accent)" }}>Save Data Locally</h3>
@@ -205,7 +205,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Account */}
-          <div className="form-card" style={{ padding: 24, background: "rgba(224, 90, 90, 0.05)", borderRadius: 12, border: "1px solid rgba(224, 90, 90, 0.2)" }}>
+          <div className="form-card settings-card" style={{ padding: 24, background: "rgba(224, 90, 90, 0.05)", borderRadius: 12, border: "1px solid rgba(224, 90, 90, 0.2)" }}>
             <h3 style={{ color: "var(--danger)", marginBottom: 16, borderBottom: "1px solid rgba(224, 90, 90, 0.2)", paddingBottom: 8 }}>Account</h3>
             <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 4 }}>
               👤 <strong>{user?.username}</strong>

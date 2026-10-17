@@ -341,7 +341,7 @@ function BillDetailContent() {
               <div
                 style={{
                   display: "inline-flex",
-                  background: "#181824",
+                  background: "var(--bg-secondary)",
                   borderRadius: 8,
                   padding: 3,
                   border: "1px solid var(--border-light)",

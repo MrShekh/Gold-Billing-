@@ -45,17 +45,28 @@ export default function InstallApp() {
     };
   }, []);
 
-  if (standalone || (!deferred && !isIOS)) return null;
+  if (standalone) {
+    return (
+      <div className="form-card settings-card no-print" style={{ marginBottom: 20 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, color: "var(--text-primary)" }}>
+          Install Gold Billing
+        </h3>
+        <p style={{ fontSize: 13, color: "var(--success)", display: "flex", alignItems: "center", gap: 6, margin: 0, fontWeight: 600 }}>
+          ✓ Gold Billing is currently running as an installed application.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="form-card no-print" style={{ marginBottom: 20 }}>
+    <div className="form-card settings-card no-print" style={{ marginBottom: 20 }}>
       <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, color: "var(--text-primary)" }}>
         Install Gold Billing
       </h3>
       <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 12 }}>
-        Add Gold Billing to your home screen to open it like an app, full screen.
+        Add Gold Billing to your phone or desktop home screen to open it full screen like an app.
       </p>
-      {deferred && (
+      {deferred ? (
         <button
           type="button"
           className="btn btn-primary"
@@ -67,9 +78,8 @@ export default function InstallApp() {
         >
           <Download size={15} /> Install app
         </button>
-      )}
-      {isIOS && !deferred && (
-        <ol style={{ fontSize: 13, color: "var(--text-secondary)", paddingLeft: 18, lineHeight: 1.9 }}>
+      ) : isIOS ? (
+        <ol style={{ fontSize: 13, color: "var(--text-secondary)", paddingLeft: 18, lineHeight: 1.9, margin: 0 }}>
           <li>
             Open this page in <strong>Safari</strong>.
           </li>
@@ -80,6 +90,10 @@ export default function InstallApp() {
             Choose <strong>Add to Home Screen</strong> <PlusSquare size={13} style={{ verticalAlign: "-2px" }} />, then tap Add.
           </li>
         </ol>
+      ) : (
+        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+          💡 To install: tap your browser menu (<strong>⋮</strong> or <strong>Share</strong>) and select <strong>&quot;Install app&quot;</strong> or <strong>&quot;Add to Home screen&quot;</strong>.
+        </p>
       )}
     </div>
   );

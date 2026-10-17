@@ -242,8 +242,9 @@ export default function CustomersPage() {
                 <p>Add a new customer to get started</p>
               </div>
             ) : (
-              <div className="table-responsive">
-                <table className="data-table stack-mobile">
+              <>
+              <div className="table-responsive desktop-table-view">
+                <table className="data-table">
                   <thead>
                     <tr>
                       <th>#</th>
@@ -450,6 +451,80 @@ export default function CustomersPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Mobile card list (same data + handlers as the table above) */}
+              <div className="mobile-card-list" style={{ padding: 12 }}>
+                {filtered.map((c) => {
+                  const bal = balances[c.id];
+                  const gold = bal?.fine_gold_balance ?? 0;
+                  const cash = bal?.cash_balance ?? 0;
+                  const goldColor = gold < -0.0001 ? "var(--success)" : gold > 0.0001 ? "#f59e0b" : "var(--text-muted)";
+                  const cashColor = cash < -0.01 ? "var(--success)" : cash > 0.01 ? "#f59e0b" : "var(--text-muted)";
+                  const n = getCustomerBillCount(c.id);
+                  return (
+                    <div key={c.id} className="mobile-list-card">
+                      <div className="mobile-card-top">
+                        <div style={{ minWidth: 0 }}>
+                          <Link href={`/customers/${c.id}`} className="mobile-card-main" style={{ textDecoration: "none", display: "block" }}>
+                            {c.name}
+                          </Link>
+                          <div className="mobile-card-sub"><Phone size={11} style={{ verticalAlign: "middle" }} /> {c.phone}</div>
+                          {c.address && (
+                            <div className="mobile-card-sub"><MapPin size={11} style={{ verticalAlign: "middle" }} /> {c.address}</div>
+                          )}
+                        </div>
+                        <span className="mobile-card-badge">{n} bill{n !== 1 ? "s" : ""}</span>
+                      </div>
+                      <div className="mobile-balance-grid">
+                        <div>
+                          <span>Gold Jama</span>
+                          <strong style={{ color: goldColor }}>
+                            {bal === undefined ? "—" : gold < -0.0001 ? `${Math.abs(gold).toFixed(3)} g (Adv)` : `${gold.toFixed(3)} g`}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>Cash Jama</span>
+                          <strong style={{ color: cashColor }}>
+                            {bal === undefined ? "—" : cash < -0.01
+                              ? `₹${Math.abs(cash).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (Adv)`
+                              : `₹${cash.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="mobile-action-row">
+                        <Link href={`/customers/${c.id}`} className="btn btn-sm btn-primary"><BookOpen size={14} /> Ledger</Link>
+                        <button className="btn btn-sm btn-secondary" onClick={() => openEdit(c)}><Pencil size={14} /> Edit</button>
+                        <button
+                          className="btn btn-sm"
+                          style={{ background: "rgba(245,158,11,0.15)", color: "#b45309", border: "1px solid rgba(245,158,11,0.3)" }}
+                          onClick={() => (payPanelId === c.id ? closePayPanel() : openPayPanel(c.id))}
+                        >
+                          <CreditCard size={14} /> Payment
+                        </button>
+                        <button className="btn btn-sm btn-danger" aria-label="Delete customer" onClick={() => setDeleteConfirm(c.id)}><Trash2 size={14} /></button>
+                      </div>
+                      {payPanelId === c.id && (
+                        <div className="mobile-pay-panel">
+                          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Record Payment / Settle</div>
+                          <label className="form-label">Fine Gold Paid (grams)</label>
+                          <input type="number" inputMode="decimal" min="0" step="0.001" value={payGold}
+                            onChange={(e) => setPayGold(e.target.value)} placeholder="0.000" className="form-input" />
+                          <label className="form-label" style={{ marginTop: 8 }}>Cash Paid (₹)</label>
+                          <input type="number" inputMode="decimal" min="0" step="0.01" value={payCash}
+                            onChange={(e) => setPayCash(e.target.value)} placeholder="0.00" className="form-input" />
+                          <div className="mobile-action-row" style={{ marginTop: 10 }}>
+                            <button className="btn btn-primary" disabled={payLoading} onClick={() => handleRecordPayment(c.id)}>
+                              {payLoading ? "Saving…" : "✓ Confirm"}
+                            </button>
+                            <button className="btn btn-secondary" onClick={closePayPanel}>Cancel</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              </>
             )}
           </div>
         </div>

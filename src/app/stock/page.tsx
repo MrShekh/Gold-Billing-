@@ -299,8 +299,9 @@ export default function AdvanceStockPage() {
                   </p>
                 </div>
               ) : (
-                <div className="table-responsive">
-                  <table className="data-table stack-mobile">
+                <>
+                <div className="table-responsive desktop-table-view">
+                  <table className="data-table">
                     <thead>
                       <tr>
                         <th>#</th>
@@ -426,6 +427,45 @@ export default function AdvanceStockPage() {
                     </tbody>
                   </table>
                 </div>
+
+                <div className="mobile-card-list" style={{ padding: 12 }}>
+                  {filtered.map((c) => {
+                    const bal = balances[c.id];
+                    const goldAdv = bal && bal.fine_gold_balance < -0.0001 ? Math.abs(bal.fine_gold_balance) : 0;
+                    const cashAdv = bal && bal.cash_balance < -0.01 ? Math.abs(bal.cash_balance) : 0;
+                    const n = getCustomerBillCount(c.id);
+                    return (
+                      <div key={c.id} className="mobile-list-card">
+                        <div className="mobile-card-top">
+                          <div style={{ minWidth: 0 }}>
+                            <Link href={`/customers/${c.id}`} className="mobile-card-main" style={{ textDecoration: "none", display: "block" }}>{c.name}</Link>
+                            <div className="mobile-card-sub"><Phone size={11} style={{ verticalAlign: "middle" }} /> {c.phone}</div>
+                          </div>
+                          <span className="mobile-card-badge">{n} bill{n !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="mobile-balance-grid">
+                          <div>
+                            <span>Advance Fine Gold</span>
+                            <strong style={{ color: goldAdv > 0 ? "var(--success)" : "var(--text-muted)" }}>
+                              {goldAdv > 0 ? `${goldAdv.toFixed(3)} g Adv` : "—"}
+                            </strong>
+                          </div>
+                          <div>
+                            <span>Advance Cash</span>
+                            <strong style={{ color: cashAdv > 0 ? "var(--success)" : "var(--text-muted)" }}>
+                              {cashAdv > 0 ? `₹${cashAdv.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Adv` : "—"}
+                            </strong>
+                          </div>
+                        </div>
+                        <div className="mobile-action-row">
+                          <Link href={`/bills/new?customerId=${c.id}`} className="btn btn-sm btn-primary"><PlusCircle size={14} /> Use in Bill</Link>
+                          <Link href={`/customers/${c.id}`} className="btn btn-sm btn-secondary"><BookOpen size={14} /> Ledger</Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                </>
               )}
             </div>
           </div>

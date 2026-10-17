@@ -35,9 +35,12 @@ export default function Sidebar() {
     <>
       {/* Mobile Header */}
       <div className="mobile-header">
-        <h1>⚜ GoldBill</h1>
-        <button className="menu-toggle" onClick={() => setIsOpen(true)}>
-          <Menu size={24} />
+        <div>
+          <h1>⚜ GoldBill</h1>
+          <p className="mobile-header-sub">Jewellery Billing System</p>
+        </div>
+        <button className="menu-toggle" onClick={() => setIsOpen(true)} aria-label="Open Navigation Menu">
+          <Menu size={20} />
         </button>
       </div>
 
