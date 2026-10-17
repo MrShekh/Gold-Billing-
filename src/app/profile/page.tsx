@@ -17,10 +17,10 @@ export default function ProfilePage() {
     business_name: "", owner_name: "", phone: "", email: "", address: "", city: "", gst_no: ""
   });
 
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
 
   useEffect(() => {
-    const t = localStorage.getItem("theme") || "dark";
+    const t = localStorage.getItem("theme") || "light";
     setTheme(t);
   }, []);
 
