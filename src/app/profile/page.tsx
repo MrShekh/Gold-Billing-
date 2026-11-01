@@ -19,6 +19,30 @@ export default function ProfilePage() {
 
   const [theme, setTheme] = useState("light");
 
+  // Resize the chosen logo to a small PNG data URL so it stays light to store/load
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setProfileMsg("Please choose an image file"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 300;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setProfile((p) => ({ ...p, logo: canvas.toDataURL("image/png") }));
+        setProfileMsg("Logo selected - click Save to apply it on bills");
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     const t = localStorage.getItem("theme") || "light";
     setTheme(t);
@@ -111,6 +135,31 @@ export default function ProfilePage() {
 
             <form onSubmit={handleProfileSave}>
               <div className="profile-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <label className="form-label">Business Logo</label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                    <div style={{ width: 72, height: 72, border: "1px dashed var(--border-light)", borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                      {profile.logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={profile.logo} alt="Business logo" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                      ) : (
+                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>No logo</span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <label className="btn btn-secondary" style={{ cursor: "pointer" }}>
+                        {profile.logo ? "Change Logo" : "Upload Logo"}
+                        <input type="file" accept="image/*" onChange={handleLogoChange} style={{ display: "none" }} />
+                      </label>
+                      {profile.logo && (
+                        <button type="button" className="btn btn-secondary" style={{ color: "var(--danger)" }} onClick={() => setProfile({ ...profile, logo: "" })}>
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>Shown at the top of your bills. Click Save after changing.</p>
+                </div>
                 <div>
                   <label className="form-label">Business Name</label>
                   <input type="text" className="form-input" value={profile.business_name || ""} onChange={e => setProfile({ ...profile, business_name: e.target.value })} />

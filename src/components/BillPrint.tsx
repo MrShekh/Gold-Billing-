@@ -10,6 +10,8 @@ export interface BillBusiness {
   address?: string;
   city?: string;
   gst_no?: string;
+  /** Business logo as a data URL (from Settings) */
+  logo?: string;
 }
 
 interface Props {
@@ -330,7 +332,16 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
         >
           {/* Logo + name */}
           <div style={{ display: "flex", alignItems: "center", gap: ph ? 8 : 14, minWidth: 0, flex: "1 1 auto" }}>
-            <Logo size={ph ? 38 : 64} />
+            {business?.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={business.logo}
+                alt="Logo"
+                style={{ height: ph ? 38 : 64, width: "auto", maxWidth: ph ? 70 : 120, objectFit: "contain", flexShrink: 0 }}
+              />
+            ) : (
+              <Logo size={ph ? 38 : 64} />
+            )}
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: SERIF, lineHeight: 1.1, display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: ph ? 5 : 9 }}>
                 <span style={{ fontSize: ph ? 20 : 34, fontWeight: 700, color: GOLD, letterSpacing: ph ? 0.8 : 1.5, textTransform: "uppercase" }}>

@@ -13,6 +13,7 @@ type LeanProfile = {
     address: string;
     city: string;
     gstNo: string;
+    logo?: string;
     updatedAt?: Date;
 };
 
@@ -26,6 +27,7 @@ function toResponse(p: LeanProfile) {
         address: p.address,
         city: p.city,
         gst_no: p.gstNo,
+        logo: p.logo || "",
         updated_at: p.updatedAt,
     };
 }
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
                 address: data.address,
                 city: data.city,
                 gstNo: data.gst_no,
+                ...(typeof data.logo === "string" ? { logo: data.logo } : {}),
             },
             { upsert: true, new: true }
         ).lean() as LeanProfile | null;

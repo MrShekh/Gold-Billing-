@@ -9,6 +9,7 @@ export interface IProfile extends Document {
     address: string;
     city: string;
     gstNo: string;
+    logo: string;
 }
 
 const ProfileSchema = new Schema<IProfile>(
@@ -21,6 +22,7 @@ const ProfileSchema = new Schema<IProfile>(
         address: { type: String, default: "" },
         city: { type: String, default: "" },
         gstNo: { type: String, default: "" },
+        logo: { type: String, default: "" },
     },
     { timestamps: true }
 );

@@ -24,6 +24,7 @@ export interface Profile {
   address: string;
   city: string;
   gst_no: string;
+  logo?: string;
   updated_at: string;
 }
 
