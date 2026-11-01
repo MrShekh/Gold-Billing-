@@ -92,6 +92,12 @@ export interface Bill {
   prevFineGold?: string;
   closingFineGold?: string;
   createdAt: string;
+  updatedAt?: string;
+}
+
+/** Time a bill was last created or edited (newest-first ordering) */
+export function billActivityTime(b: { createdAt: string; updatedAt?: string }): number {
+  return new Date(b.updatedAt || b.createdAt).getTime();
 }
 
 // ─── Helper ───────────────────────────────────────────────────────────────────

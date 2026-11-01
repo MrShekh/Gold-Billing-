@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import AuthGuard from "@/components/AuthGuard";
-import { getDashboardStats, getBills, getCustomers, peekCache } from "@/lib/db";
+import { getDashboardStats, getBills, getCustomers, peekCache, billActivityTime } from "@/lib/db";
 import type { Bill, Customer } from "@/lib/db";
 import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp, Layers, ChevronRight, Plus } from "lucide-react";
 
@@ -27,7 +27,7 @@ export default function DashboardPage() {
     const cb = peekCache<Bill[]>("bills");
     const cc = peekCache<Customer[]>("customers");
     if (cs) setStats(cs);
-    if (cb) setRecentBills([...cb].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+    if (cb) setRecentBills([...cb].sort((a, b) => billActivityTime(b) - billActivityTime(a)).slice(0, 5));
     if (cc) setRecentCustomers([...cc].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
 
     async function fetchData() {
@@ -40,7 +40,7 @@ export default function DashboardPage() {
         setStats(statsData as typeof stats);
 
         const sortedBills = billsData.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          (a, b) => billActivityTime(b) - billActivityTime(a)
         );
         setRecentBills(sortedBills.slice(0, 5));
 

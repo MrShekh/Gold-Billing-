@@ -83,6 +83,7 @@ const BillSchema = new Schema<IBill>(
 
 BillSchema.index({ userId: 1, customerId: 1, date: 1, createdAt: 1 });
 BillSchema.index({ userId: 1, createdAt: -1 });
+BillSchema.index({ userId: 1, updatedAt: -1 });
 
 const Bill: Model<IBill> =
     mongoose.models.Bill || mongoose.model<IBill>("Bill", BillSchema);

@@ -59,7 +59,8 @@ export async function recalculateCustomerLedger(userId: string, customerId: stri
         bill.closingBalance = runningCash.toFixed(2);
         bill.billTotalFine = billFineNet.toFixed(3);
 
-        await bill.save();
+        // timestamps:false so auto-recalculated bills don't jump to the top of the list
+        await bill.save({ timestamps: false });
     }
 
     // Update the live customer balance in DB

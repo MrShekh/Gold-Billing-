@@ -2,7 +2,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
-import { getBills, deleteBill, getAllCustomerBalances, peekCache, type Bill, type CustomerBalance } from "@/lib/db";
+import { getBills, deleteBill, getAllCustomerBalances, peekCache, billActivityTime, type Bill, type CustomerBalance } from "@/lib/db";
 import {
   PlusCircle,
   Search,
@@ -64,7 +64,7 @@ export default function BillsPage() {
         getAllCustomerBalances(),
       ]);
       const all = allData.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) => billActivityTime(b) - billActivityTime(a)
       );
       setBills(all);
 
@@ -82,7 +82,7 @@ export default function BillsPage() {
     // Paint last-known data instantly, then refresh in the background
     const cb = peekCache<Bill[]>("bills");
     const cbal = peekCache<CustomerBalance[]>("balances");
-    if (cb) setBills([...cb].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    if (cb) setBills([...cb].sort((a, b) => billActivityTime(b) - billActivityTime(a)));
     if (cbal) {
       const m: Record<string, CustomerBalance> = {};
       for (const b of cbal) m[b.customer_id] = b;

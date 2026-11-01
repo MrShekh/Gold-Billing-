@@ -13,6 +13,7 @@ function mapBill(b: Record<string, unknown>) {
         date: b.date,
         time: b.time,
         createdAt: b.createdAt,
+        updatedAt: b.updatedAt,
         paidCash: b.paidCash,
         receiptCash: b.receiptCash,
         previousBalance: b.previousBalance,
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
         const customerId = req.nextUrl.searchParams.get("customerId");
         const query: Record<string, unknown> = { userId };
         if (customerId) query.customerId = customerId;
-        const bills = await BillModel.find(query).sort({ createdAt: -1 }).lean();
+        const bills = await BillModel.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean();
         return NextResponse.json(bills.map(b => mapBill(b as unknown as Record<string, unknown>)));
     } catch (err) {
         console.error(err);
