@@ -10,6 +10,7 @@ import {
   getBills,
   getCustomerBalance,
   getAllCustomerBalances,
+  peekCache,
   recordPayment,
   type Customer,
   type CustomerBalance,
@@ -70,7 +71,28 @@ export default function CustomersPage() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // Paint last-known data instantly, then refresh in the background
+    const cc = peekCache<Customer[]>("customers");
+    const cb = peekCache<{ customerId: string }[]>("bills");
+    const cbal = peekCache<CustomerBalance[]>("balances");
+    if (cc) {
+      const sorted = [...cc].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setCustomers(sorted);
+      setFiltered(sorted);
+    }
+    if (cb) {
+      const counts: Record<string, number> = {};
+      for (const bill of cb) counts[bill.customerId] = (counts[bill.customerId] || 0) + 1;
+      setBillCounts(counts);
+    }
+    if (cbal) {
+      const m: Record<string, CustomerBalance | null> = {};
+      for (const b of cbal) m[b.customer_id] = b;
+      setBalances(m);
+    }
+    load();
+  }, []);
 
   useEffect(() => {
     const q = search.toLowerCase();

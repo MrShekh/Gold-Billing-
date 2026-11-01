@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
+import { clearDataCache } from "@/lib/db";
 
 interface AuthUser {
   id?: string;
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
+    clearDataCache();
     setUser(null);
     window.location.href = "/login";
   }

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import AuthGuard from "@/components/AuthGuard";
-import { getDashboardStats, getBills, getCustomers } from "@/lib/db";
+import { getDashboardStats, getBills, getCustomers, peekCache } from "@/lib/db";
 import type { Bill, Customer } from "@/lib/db";
 import { Users, FileText, CalendarDays, PlusCircle, ArrowRight, TrendingUp, Layers, ChevronRight, Plus } from "lucide-react";
 
@@ -22,6 +22,14 @@ export default function DashboardPage() {
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
 
   useEffect(() => {
+    // Paint last-known data instantly, then refresh in the background
+    const cs = peekCache<typeof stats>("stats");
+    const cb = peekCache<Bill[]>("bills");
+    const cc = peekCache<Customer[]>("customers");
+    if (cs) setStats(cs);
+    if (cb) setRecentBills([...cb].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+    if (cc) setRecentCustomers([...cc].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5));
+
     async function fetchData() {
       try {
         const [statsData, billsData, customersData] = await Promise.all([

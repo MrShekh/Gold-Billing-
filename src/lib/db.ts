@@ -106,6 +106,41 @@ async function apiFetch(url: string, options?: RequestInit) {
 // ─── PROFILE CACHE ────────────────────────────────────────────────────────────
 const PROFILE_CACHE_KEY = "goldbill_profile";
 
+// ─── DATA CACHE (stale-while-revalidate) ──────────────────────────────────────
+// Last-known list data is kept in localStorage so pages can paint instantly
+// while fresh data is fetched in the background.
+const DATA_CACHE_PREFIX = "gb_cache_";
+
+export function peekCache<T>(key: string): T | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(DATA_CACHE_PREFIX + key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key: string, value: unknown) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(DATA_CACHE_PREFIX + key, JSON.stringify(value)); } catch {}
+}
+
+export function clearDataCache() {
+  if (typeof window === "undefined") return;
+  try {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith(DATA_CACHE_PREFIX) || k === PROFILE_CACHE_KEY)
+      .forEach((k) => localStorage.removeItem(k));
+  } catch {}
+}
+
+async function cachedFetch<T>(key: string, url: string): Promise<T> {
+  const data = await apiFetch(url);
+  writeCache(key, data);
+  return data as T;
+}
+
 export function getCachedProfile(): Profile | null {
   if (typeof window === "undefined") return null;
   try {
@@ -156,7 +191,7 @@ export async function updateWhatsAppSettings(_data: Partial<WhatsAppSettings>): 
 
 // ─── CUSTOMERS ────────────────────────────────────────────────────────────────
 export async function getCustomers(): Promise<Customer[]> {
-  try { return await apiFetch("/api/customers"); }
+  try { return await cachedFetch<Customer[]>("customers", "/api/customers"); }
   catch { return []; }
 }
 
@@ -182,7 +217,7 @@ export async function getCustomerById(id: string): Promise<Customer | undefined>
 
 // ─── BILLS ────────────────────────────────────────────────────────────────────
 export async function getBills(): Promise<Bill[]> {
-  try { return await apiFetch("/api/bills"); }
+  try { return await cachedFetch<Bill[]>("bills", "/api/bills"); }
   catch { return []; }
 }
 
@@ -233,7 +268,7 @@ export async function deleteBill(id: string): Promise<void> {
 
 // ─── JAMA BALANCE ─────────────────────────────────────────────────────────────
 export async function getAllCustomerBalances(): Promise<CustomerBalance[]> {
-  try { return await apiFetch("/api/balance"); }
+  try { return await cachedFetch<CustomerBalance[]>("balances", "/api/balance"); }
   catch { return []; }
 }
 
@@ -262,6 +297,6 @@ export async function generateVoucherNo(): Promise<string> {
 
 // ─── DASHBOARD STATS ──────────────────────────────────────────────────────────
 export async function getDashboardStats() {
-  try { return await apiFetch("/api/stats"); }
+  try { return await cachedFetch<any>("stats", "/api/stats"); }
   catch { return { totalCustomers: 0, totalBills: 0, todayBills: 0, totalJamaGold: 0, totalJamaCash: 0, totalAdvanceGold: 0, totalAdvanceCash: 0, advanceCustomerCount: 0 }; }
 }
