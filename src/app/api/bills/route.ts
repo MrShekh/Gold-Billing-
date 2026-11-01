@@ -57,6 +57,14 @@ export async function GET(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         await connectDB();
+
+        // Fast endpoint to generate next voucher number without loading all bill documents
+        const vnoOnly = req.nextUrl.searchParams.get("vno");
+        if (vnoOnly) {
+            const count = await BillModel.countDocuments({ userId });
+            return NextResponse.json({ nextVno: `IR/${String(count + 1).padStart(5, "0")}` });
+        }
+
         const customerId = req.nextUrl.searchParams.get("customerId");
         const query: Record<string, unknown> = { userId };
         if (customerId) query.customerId = customerId;

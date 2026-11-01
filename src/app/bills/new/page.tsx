@@ -51,9 +51,8 @@ export default function NewBillPage() {
   useEffect(() => {
     async function init() {
       try {
-        const custData = await getCustomers();
+        const [custData, vnoData] = await Promise.all([getCustomers(), generateVoucherNo()]);
         setCustomers(custData);
-        const vnoData = await generateVoucherNo();
         setVno(vnoData);
 
         // Auto-select customer if customerId passed in URL

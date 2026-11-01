@@ -7,6 +7,7 @@ import {
   getBillById,
   getCustomerById,
   getProfile,
+  getCachedProfile,
   getCustomerBalance,
   type Bill,
   type CustomerBalance,
@@ -39,7 +40,8 @@ function BillDetailContent() {
   const [customerAddress, setCustomerAddress] = useState<string | undefined>(
     undefined
   );
-  const [profile, setProfile] = useState<Profile | null>(null);
+  // Initialize with cached profile immediately so business name NEVER flashes or delays
+  const [profile, setProfile] = useState<Profile | null>(() => getCachedProfile());
 
   // Default is ALWAYS desktop width
   const [viewMode, setViewMode] = useState<"desktop" | "phone">("desktop");
@@ -239,22 +241,28 @@ function BillDetailContent() {
   };
 
   useEffect(() => {
+    // Fetch fresh profile in background immediately
+    getProfile().then((p) => {
+      if (p) setProfile(p);
+    });
+
     if (id) {
+      let isMounted = true;
       async function fetchBill() {
         try {
           const found = await getBillById(id as string);
+          if (!isMounted) return;
           setBill(found || null);
           if (found && found.customerId) {
-            const [customer, bal, prof] = await Promise.all([
+            const [customer, bal] = await Promise.all([
               getCustomerById(found.customerId),
               getCustomerBalance(found.customerId),
-              getProfile(),
             ]);
+            if (!isMounted) return;
             if (customer) {
               setCustomerPhone(customer.phone);
               setCustomerAddress(customer.address);
             }
-            setProfile(prof ?? null);
             setCustBalance(bal ?? null);
           }
         } catch (e) {
@@ -262,6 +270,9 @@ function BillDetailContent() {
         }
       }
       fetchBill();
+      return () => {
+        isMounted = false;
+      };
     }
   }, [id]);
 

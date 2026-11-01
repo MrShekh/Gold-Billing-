@@ -9,6 +9,7 @@ import {
   deleteCustomer,
   getBills,
   getCustomerBalance,
+  getAllCustomerBalances,
   recordPayment,
   type Customer,
   type CustomerBalance,
@@ -41,28 +42,29 @@ export default function CustomersPage() {
 
   async function load() {
     try {
-      const allData = await getCustomers();
+      const [allData, allBills, allBalances] = await Promise.all([
+        getCustomers(),
+        getBills(),
+        getAllCustomerBalances(),
+      ]);
+
       const all = allData.sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       setCustomers(all);
       setFiltered(all);
 
-      const allBills = await getBills();
       const counts: Record<string, number> = {};
       for (const bill of allBills) {
         counts[bill.customerId] = (counts[bill.customerId] || 0) + 1;
       }
       setBillCounts(counts);
 
-      // Load Jama balances for all customers in parallel
-      const balanceEntries = await Promise.all(
-        all.map(async c => {
-          const bal = await getCustomerBalance(c.id);
-          return [c.id, bal] as [string, typeof bal];
-        })
-      );
-      setBalances(Object.fromEntries(balanceEntries));
+      const balMap: Record<string, CustomerBalance | null> = {};
+      for (const bal of allBalances) {
+        balMap[bal.customer_id] = bal;
+      }
+      setBalances(balMap);
     } catch (e) {
       console.error(e);
     }

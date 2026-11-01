@@ -58,7 +58,7 @@ export interface IBill extends Document {
 const BillSchema = new Schema<IBill>(
     {
         userId: { type: String, required: true, index: true },
-        customerId: { type: String, required: true },
+        customerId: { type: String, required: true, index: true },
         customerName: { type: String, required: true },
         voucherNo: { type: String, required: true },
         date: { type: String, required: true },
@@ -80,6 +80,9 @@ const BillSchema = new Schema<IBill>(
     },
     { timestamps: true }
 );
+
+BillSchema.index({ userId: 1, customerId: 1, date: 1, createdAt: 1 });
+BillSchema.index({ userId: 1, createdAt: -1 });
 
 const Bill: Model<IBill> =
     mongoose.models.Bill || mongoose.model<IBill>("Bill", BillSchema);

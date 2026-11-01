@@ -24,16 +24,18 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const statsData = await getDashboardStats();
+        const [statsData, billsData, customersData] = await Promise.all([
+          getDashboardStats(),
+          getBills(),
+          getCustomers(),
+        ]);
         setStats(statsData as typeof stats);
-        
-        const billsData = await getBills();
+
         const sortedBills = billsData.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setRecentBills(sortedBills.slice(0, 5));
-        
-        const customersData = await getCustomers();
+
         const sortedCustomers = customersData.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );

@@ -1,11 +1,9 @@
 import mongoose from "mongoose";
-import { migrateUserIds } from "./migrateUserId";
 
-// Cached connection to avoid reconnecting on every request in dev mode
+// Cached connection to avoid reconnecting on every request in serverless/dev mode
 interface MongooseCache {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
-    migrated: boolean;
 }
 
 declare global {
@@ -13,7 +11,7 @@ declare global {
     var _mongooseCache: MongooseCache | undefined;
 }
 
-const cached: MongooseCache = global._mongooseCache ?? { conn: null, promise: null, migrated: false };
+const cached: MongooseCache = global._mongooseCache ?? { conn: null, promise: null };
 global._mongooseCache = cached;
 
 export async function connectDB(): Promise<typeof mongoose> {
@@ -23,34 +21,31 @@ export async function connectDB(): Promise<typeof mongoose> {
         throw new Error("Please define the MONGODB_URI environment variable");
     }
 
-    if (cached.conn) {
-        // Migration must run even when connection is already cached
-        // (e.g., after a hot-reload that preserved the connection but reset module code)
-        if (!cached.migrated) {
-            cached.migrated = true;
-            await migrateUserIds();
-        }
+    // If we have an active, ready connection, reuse it immediately
+    if (cached.conn && mongoose.connection.readyState === 1) {
         return cached.conn;
     }
 
-    if (!cached.promise) {
+    // If disconnected or never connected, initiate connection with proper serverless timeouts
+    if (!cached.promise || mongoose.connection.readyState === 0) {
         cached.promise = mongoose.connect(MONGODB_URI, {
             bufferCommands: false,
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 30000,
+        }).then((m) => {
+            cached.conn = m;
+            return m;
         });
     }
 
     try {
         cached.conn = await cached.promise;
     } catch (err) {
-        // Don't keep a rejected promise cached — allow a retry on the next request
+        // Reset cached promise so next request can retry immediately
         cached.promise = null;
+        cached.conn = null;
         throw err;
-    }
-
-    // Run userId migration once per process lifecycle
-    if (!cached.migrated) {
-        cached.migrated = true;
-        await migrateUserIds();
     }
 
     return cached.conn;

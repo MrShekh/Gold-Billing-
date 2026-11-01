@@ -18,6 +18,8 @@ const CustomerSchema = new Schema<ICustomer>(
     { timestamps: true }
 );
 
+CustomerSchema.index({ userId: 1, createdAt: -1 });
+
 const Customer: Model<ICustomer> =
     mongoose.models.Customer || mongoose.model<ICustomer>("Customer", CustomerSchema);
 

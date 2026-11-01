@@ -103,15 +103,51 @@ async function apiFetch(url: string, options?: RequestInit) {
   return res.json();
 }
 
+// ─── PROFILE CACHE ────────────────────────────────────────────────────────────
+const PROFILE_CACHE_KEY = "goldbill_profile";
+
+export function getCachedProfile(): Profile | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setCachedProfile(p: Profile | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (p) localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(p));
+    else localStorage.removeItem(PROFILE_CACHE_KEY);
+  } catch {}
+}
+
 // ─── PROFILE ──────────────────────────────────────────────────────────────────
 export async function getProfile(): Promise<Profile | null> {
-  try { return await apiFetch("/api/profile"); }
-  catch { return null; }
+  const cached = getCachedProfile();
+  try {
+    const res = await apiFetch("/api/profile");
+    if (res) setCachedProfile(res);
+    return res || cached;
+  } catch {
+    return cached;
+  }
 }
 
 export async function updateProfile(data: Partial<Profile>): Promise<Profile | null> {
-  try { return await apiFetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); }
-  catch { return null; }
+  try {
+    const res = await apiFetch("/api/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res) setCachedProfile(res);
+    return res;
+  } catch {
+    return null;
+  }
 }
 
 // WhatsApp — kept as stubs (no longer Supabase-backed, can be implemented separately)
@@ -159,24 +195,40 @@ export async function getBillsByCustomer(customerId: string): Promise<Bill[]> {
   try {
     return await apiFetch(`/api/bills?customerId=${customerId}`);
   } catch {
-    const all = await getBills();
-    return all.filter(b => b.customerId === customerId);
+    return [];
   }
 }
 
 export async function addBill(data: Omit<Bill, "id" | "createdAt">): Promise<Bill | null> {
-  try { return await apiFetch("/api/bills", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); }
-  catch { return null; }
+  try {
+    return await apiFetch("/api/bills", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  } catch {
+    return null;
+  }
 }
 
-export async function updateBill(id: string, data: Omit<Bill, "id" | "createdAt">): Promise<Bill | null> {
-  try { return await apiFetch(`/api/bills/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }); }
-  catch { return null; }
+export async function updateBill(id: string, data: Partial<Bill>): Promise<Bill | null> {
+  try {
+    return await apiFetch(`/api/bills/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  } catch {
+    return null;
+  }
 }
 
 export async function deleteBill(id: string): Promise<void> {
-  try { await apiFetch(`/api/bills/${id}`, { method: "DELETE" }); }
-  catch { /* ignore */ }
+  try {
+    await apiFetch(`/api/bills/${id}`, { method: "DELETE" });
+  } catch {
+    /* ignore */
+  }
 }
 
 // ─── JAMA BALANCE ─────────────────────────────────────────────────────────────
@@ -198,6 +250,8 @@ export async function recordPayment(customerId: string, paidFineGold: number, pa
 // ─── VOUCHER NO ───────────────────────────────────────────────────────────────
 export async function generateVoucherNo(): Promise<string> {
   try {
+    const res = await apiFetch("/api/bills?vno=1");
+    if (res && res.nextVno) return res.nextVno;
     const bills = await getBills();
     const num = bills.length + 1;
     return `IR/${String(num).padStart(5, "0")}`;
