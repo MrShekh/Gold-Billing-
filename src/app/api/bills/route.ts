@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import BillModel from "@/models/Bill";
+import CustomerModel from "@/models/Customer";
 import CustomerBalanceModel from "@/models/CustomerBalance";
 import { getAuthUserId } from "@/lib/authHelper";
 
@@ -69,8 +70,17 @@ export async function GET(req: NextRequest) {
         const customerId = req.nextUrl.searchParams.get("customerId");
         const query: Record<string, unknown> = { userId };
         if (customerId) query.customerId = customerId;
-        const bills = await BillModel.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean();
-        return NextResponse.json(bills.map(b => mapBill(b as unknown as Record<string, unknown>)));
+        const [bills, customers] = await Promise.all([
+            BillModel.find(query).sort({ updatedAt: -1, createdAt: -1 }).lean(),
+            CustomerModel.find({ userId }).select("name").lean(),
+        ]);
+        // Always show the customer's current name (fixes bills saved under an old/misspelt name)
+        const nameById = new Map(customers.map(c => [c._id.toString(), c.name]));
+        return NextResponse.json(bills.map(b => {
+            const m = mapBill(b as unknown as Record<string, unknown>);
+            const current = nameById.get(String(b.customerId));
+            return current ? { ...m, customerName: current } : m;
+        }));
     } catch (err) {
         console.error(err);
         return NextResponse.json({ error: "Failed to fetch bills" }, { status: 500 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import BillModel from "@/models/Bill";
+import CustomerModel from "@/models/Customer";
 import CustomerBalanceModel from "@/models/CustomerBalance";
 import { getAuthUserId } from "@/lib/authHelper";
 
@@ -60,7 +61,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
         const { id } = await context.params;
         const bill = await BillModel.findOne({ _id: id, userId }).lean();
         if (!bill) return NextResponse.json({ error: "Not found" }, { status: 404 });
-        return NextResponse.json(mapBill(bill as unknown as Record<string, unknown>));
+        const cust = await CustomerModel.findOne({ _id: bill.customerId, userId }).select("name").lean();
+        const mapped = mapBill(bill as unknown as Record<string, unknown>);
+        return NextResponse.json(cust ? { ...mapped, customerName: cust.name } : mapped);
     } catch (err) {
         console.error(err);
         return NextResponse.json({ error: "Failed" }, { status: 500 });

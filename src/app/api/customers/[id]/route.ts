@@ -33,6 +33,12 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
             { new: true }
         ).lean();
         if (!c) return NextResponse.json({ error: "Not found" }, { status: 404 });
+        // Bills store a copy of the customer name - keep them in sync with the edit
+        await BillModel.updateMany(
+            { customerId: id, userId },
+            { $set: { customerName: c.name } },
+            { timestamps: false }
+        );
         return NextResponse.json({ id: c._id.toString(), name: c.name, phone: c.phone, address: c.address ?? "", createdAt: c.createdAt });
     } catch (err) {
         console.error(err);
