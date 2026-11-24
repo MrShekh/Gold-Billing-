@@ -489,6 +489,44 @@ function EditBillContent() {
                     ))}
                   </select>
 
+                  {/* Latest balance of this customer (after ALL bills) */}
+                  {!jamaLoading && cid && jamaBalance && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        padding: "6px 10px",
+                        borderRadius: 6,
+                        background: "#eef2ff",
+                        border: "1px solid #6366f1",
+                        fontSize: 11,
+                        color: "#312e81",
+                        fontFamily: MONO_FONT,
+                      }}
+                    >
+                      <div style={{ fontSize: 9, fontWeight: "bold", letterSpacing: 0.5 }}>
+                        LATEST BALANCE (AFTER ALL BILLS)
+                      </div>
+                      <div style={{ display: "flex", gap: 16, marginTop: 2, fontWeight: 700 }}>
+                        <span>
+                          Gold:{" "}
+                          {jamaBalance.fine_gold_balance < -0.0001
+                            ? `${Math.abs(jamaBalance.fine_gold_balance).toFixed(3)} g Adv`
+                            : jamaBalance.fine_gold_balance > 0.0001
+                            ? `${jamaBalance.fine_gold_balance.toFixed(3)} g Due`
+                            : "0.000 g"}
+                        </span>
+                        <span>
+                          Cash:{" "}
+                          {jamaBalance.cash_balance < -0.01
+                            ? `₹${Math.abs(jamaBalance.cash_balance).toFixed(2)} Adv`
+                            : jamaBalance.cash_balance > 0.01
+                            ? `₹${jamaBalance.cash_balance.toFixed(2)} Due`
+                            : "₹0.00"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Previous Jama Banner */}
                   {jamaLoading && (
                     <div

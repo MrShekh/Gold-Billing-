@@ -21,6 +21,8 @@ interface Props {
   customerPhone?: string;
   customerAddress?: string;
   isPhoneSize?: boolean;
+  /** Customer's live balance (after ALL bills). Shown only if it differs from this bill's closing. */
+  latestBalance?: { fine: number; cash: number } | null;
 }
 
 function fmtDate(d: string) {
@@ -78,7 +80,7 @@ const signed = (raw: string | undefined, fallback = "0.000") => {
 };
 
 export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
-  { bill, business, customerPhone, customerAddress, isPhoneSize = false },
+  { bill, business, customerPhone, customerAddress, isPhoneSize = false, latestBalance },
   outerRef
 ) {
   const internalRef = useRef<HTMLDivElement>(null);
@@ -554,6 +556,45 @@ export const BillPrint = forwardRef<HTMLDivElement, Props>(function BillPrint(
               : "0.000 g (Cleared)"
           )}
         </div>
+
+        {/* ===== LATEST BALANCE (only when later bills / settlements changed it) ===== */}
+        {latestBalance &&
+          (Math.abs(latestBalance.fine - closingFine) > 0.0005 ||
+            Math.abs(latestBalance.cash - closingCash) > 0.005) && (
+            <div
+              style={{
+                marginTop: ph ? 6 : 10,
+                padding: fPad,
+                border: `1px solid ${GOLD}`,
+                borderRadius: 6,
+                background: CREAM_2,
+                fontSize: fSize,
+                color: INK,
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                gap: ph ? 4 : 12,
+              }}
+            >
+              <span style={{ fontWeight: 700, color: NAVY }}>LATEST BALANCE (after all bills)</span>
+              <span style={{ fontWeight: 700 }}>
+                Cash:{" "}
+                {latestBalance.cash < -0.01
+                  ? `₹${Math.abs(latestBalance.cash).toFixed(2)} Adv`
+                  : latestBalance.cash > 0.01
+                  ? `₹${latestBalance.cash.toFixed(2)} Due`
+                  : "₹0.00 (Cleared)"}
+              </span>
+              <span style={{ fontWeight: 700 }}>
+                Gold:{" "}
+                {latestBalance.fine < -0.0001
+                  ? `${Math.abs(latestBalance.fine).toFixed(3)} g Adv`
+                  : latestBalance.fine > 0.0001
+                  ? `${latestBalance.fine.toFixed(3)} g Due`
+                  : "0.000 g (Cleared)"}
+              </span>
+            </div>
+          )}
       </div>
     </div>
   );

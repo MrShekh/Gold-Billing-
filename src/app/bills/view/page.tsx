@@ -698,6 +698,7 @@ function BillDetailContent() {
               <BillPrint
                 bill={bill}
                 business={profile}
+                latestBalance={custBalance ? { fine: custBalance.fine_gold_balance, cash: custBalance.cash_balance } : null}
                 customerPhone={customerPhone}
                 customerAddress={customerAddress}
                 isPhoneSize={viewMode === "phone"}
@@ -720,6 +721,7 @@ function BillDetailContent() {
             <BillPrint
               bill={bill}
               business={profile}
+                latestBalance={custBalance ? { fine: custBalance.fine_gold_balance, cash: custBalance.cash_balance } : null}
               customerPhone={customerPhone}
               customerAddress={customerAddress}
               isPhoneSize={true}
