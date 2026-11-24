@@ -63,12 +63,16 @@ export async function recalculateCustomerLedger(userId: string, customerId: stri
         await bill.save({ timestamps: false });
     }
 
-    // Update the live customer balance in DB
+    // Live balance = bills chain minus separate Settle/Payment entries (never lose those)
+    const existing = await CustomerBalanceModel.findOne({ userId, customerId }).lean();
+    const liveGold = Number((runningGold - (existing?.settledGold ?? 0)).toFixed(3));
+    const liveCash = Number((runningCash - (existing?.settledCash ?? 0)).toFixed(2));
+
     await CustomerBalanceModel.findOneAndUpdate(
         { userId, customerId },
-        { userId, fineGoldBalance: runningGold, cashBalance: runningCash },
+        { userId, fineGoldBalance: liveGold, cashBalance: liveCash },
         { upsert: true, new: true }
     );
 
-    return { fineGoldBalance: runningGold, cashBalance: runningCash };
+    return { fineGoldBalance: liveGold, cashBalance: liveCash };
 }

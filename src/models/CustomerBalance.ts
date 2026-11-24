@@ -5,6 +5,9 @@ export interface ICustomerBalance extends Document {
     customerId: string;
     fineGoldBalance: number;
     cashBalance: number;
+    /** Total of Settle/Payment entries (not inside any bill). Kept so a bill recalculation never wipes them. */
+    settledGold?: number;
+    settledCash?: number;
     updatedAt: Date;
 }
 
@@ -14,6 +17,8 @@ const CustomerBalanceSchema = new Schema<ICustomerBalance>(
         customerId: { type: String, required: true },
         fineGoldBalance: { type: Number, default: 0 },
         cashBalance: { type: Number, default: 0 },
+        settledGold: { type: Number, default: 0 },
+        settledCash: { type: Number, default: 0 },
     },
     { timestamps: true }
 );

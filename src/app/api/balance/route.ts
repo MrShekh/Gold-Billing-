@@ -49,7 +49,13 @@ export async function POST(req: NextRequest) {
 
         await CustomerBalanceModel.findOneAndUpdate(
             { userId, customerId },
-            { userId, fineGoldBalance: newFineGold, cashBalance: newCash },
+            {
+                userId,
+                fineGoldBalance: newFineGold,
+                cashBalance: newCash,
+                settledGold: Number(((prev?.settledGold ?? 0) + (paidFineGold || 0)).toFixed(3)),
+                settledCash: Number(((prev?.settledCash ?? 0) + (paidCash || 0)).toFixed(2)),
+            },
             { upsert: true, new: true }
         );
         return NextResponse.json({ success: true });
